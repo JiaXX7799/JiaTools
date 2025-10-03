@@ -151,9 +151,8 @@ public class MainWindow : Window, IDisposable
             try
             {
                 if (ImGui.Begin(windowID, windowFlags))
-                {
                     HandleClickEventsSafely(lineRects, objects, currentPage, groupPos);
-                }
+
                 ImGui.End();
             }
             finally
