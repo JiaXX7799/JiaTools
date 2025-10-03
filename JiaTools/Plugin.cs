@@ -42,6 +42,11 @@ public sealed class Plugin : IDalamudPlugin
             {
                 HelpMessage = "切换 JiaTools 悬浮窗的开启/关闭"
             });
+            
+            DService.Command.AddHandler("/jconfig", new Dalamud.Game.Command.CommandInfo(OnConfigCommand)
+            {
+                HelpMessage = "打开 JiaTools 配置窗口"
+            });
         }
         catch (Exception ex)
         {
@@ -58,6 +63,11 @@ public sealed class Plugin : IDalamudPlugin
         var status = configuration.Enabled ? "已开启" : "已关闭";
         DService.Chat.Print($"[JiaTools] 悬浮窗{status}");
     }
+    
+    private void OnConfigCommand(string command, string args)
+    {
+        configWindow.IsOpen = !configWindow.IsOpen;
+    }
 
     private void OnFrameworkUpdate(Dalamud.Plugin.Services.IFramework framework)
     {
@@ -67,6 +77,7 @@ public sealed class Plugin : IDalamudPlugin
     public void Dispose()
     {
         DService.Command.RemoveHandler("/jtools");
+        DService.Command.RemoveHandler("/jconfig");
         DService.Framework.Update -= OnFrameworkUpdate;
         windowSystem.RemoveAllWindows();
         mainWindow.Dispose();
