@@ -32,8 +32,12 @@ public sealed class Plugin : IDalamudPlugin
             windowSystem.AddWindow(configWindow);
 
             DService.UiBuilder.Draw += windowSystem.Draw;
-            DService.UiBuilder.OpenConfigUi += () => configWindow.IsOpen = true;
-            DService.UiBuilder.OpenMainUi += () => mainWindow.IsOpen = true;
+            DService.UiBuilder.OpenConfigUi += () => configWindow.IsOpen = !configWindow.IsOpen;
+            DService.UiBuilder.OpenMainUi += () =>
+            {
+                configuration.Enabled = !configuration.Enabled;
+                configuration.Save();
+            };
 
             DService.Framework.Update += OnFrameworkUpdate;
 
