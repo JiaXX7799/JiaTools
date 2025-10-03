@@ -199,6 +199,7 @@ public class ConfigWindow : Window, IDisposable
 
         config.ShowEntityID = DrawStyledCheckbox("EntityID", config.ShowEntityID, "对象的唯一实体ID\n", new Vector4(0.6f, 0.8f, 1.0f, 1.0f));
         config.ShowDataID = DrawStyledCheckbox("DataID", config.ShowDataID, "对象的DataID\nps: 相同类型对象共享此ID", new Vector4(0.6f, 0.8f, 1.0f, 1.0f));
+        config.UseHexID = DrawStyledCheckbox("16进制ID显示", config.UseHexID, "使用16进制显示EntityID和DataID", new Vector4(1.0f, 0.8f, 0.4f, 1.0f));
         config.ShowPosition = DrawStyledCheckbox("位置坐标", config.ShowPosition, "对象的世界坐标", new Vector4(0.8f, 1.0f, 0.6f, 1.0f));
         config.ShowRotation = DrawStyledCheckbox("旋转角度", config.ShowRotation, "对象的朝向角度\n(弧度和度数)", new Vector4(0.8f, 1.0f, 0.6f, 1.0f));
 
