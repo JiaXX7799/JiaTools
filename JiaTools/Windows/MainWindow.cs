@@ -229,10 +229,18 @@ public class MainWindow : Window, IDisposable
         lines.Add(($"类型: {objInfo.ObjectKind}", White, objInfo.ObjectKind.ToString()));
 
         if (config.ShowEntityID)
-            lines.Add(($"EntityID: {objInfo.EntityID}", White, objInfo.EntityID.ToString()));
+        {
+            var entityIDText = config.UseHexID ? $"EntityID: 0x{objInfo.EntityID:X8}" : $"EntityID: {objInfo.EntityID}";
+            var entityIDCopy = config.UseHexID ? $"0x{objInfo.EntityID:X8}" : objInfo.EntityID.ToString();
+            lines.Add((entityIDText, White, entityIDCopy));
+        }
 
         if (config.ShowDataID)
-            lines.Add(($"DataID: {objInfo.DataID}", White, objInfo.DataID.ToString()));
+        {
+            var dataIDText = config.UseHexID ? $"DataID: 0x{objInfo.DataID:X8}" : $"DataID: {objInfo.DataID}";
+            var dataIDCopy = config.UseHexID ? $"0x{objInfo.DataID:X8}" : objInfo.DataID.ToString();
+            lines.Add((dataIDText, White, dataIDCopy));
+        }
 
         if (config.ShowPosition)
             lines.Add(($"位置: {objInfo.Position.X:F1}, {objInfo.Position.Y:F1}, {objInfo.Position.Z:F1}", White,
