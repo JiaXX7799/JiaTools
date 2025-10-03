@@ -1,7 +1,3 @@
 [submodule "OmenTools"]
 	path = OmenTools
 	url = https://github.com/AtmoOmen/OmenTools.git
-[submodule "KamiToolKit"]
-	path = KamiToolKit
-	url = https://github.com/VeeverSW/KamiToolKit.git
-	branch = master
