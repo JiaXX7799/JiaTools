@@ -90,12 +90,29 @@ public class MainWindow : Window, IDisposable
 
             GroupCurrentPage.TryAdd(groupPos, 0);
 
-            var currentPage = GroupCurrentPage[groupPos];
+            // 检查是否有正在读条的对象，优先显示
+            var castingIndex = -1;
+            for (var i = 0; i < objects.Count; i++)
+            {
+                if (objects[i].IsCasting)
+                {
+                    castingIndex = i;
+                    break;
+                }
+            }
+
+            // 如果有正在读条的对象，优先显示它
+            var currentPage = castingIndex >= 0 ? castingIndex : GroupCurrentPage[groupPos];
+
             if (currentPage >= objects.Count)
             {
                 currentPage = 0;
                 GroupCurrentPage[groupPos] = 0;
             }
+
+            // 如果不是因为读条而显示的页面，保存当前页码
+            if (castingIndex < 0)
+                GroupCurrentPage[groupPos] = currentPage;
 
             var objInfo = objects[currentPage];
             var (bgMin, bgMax, lineRects) = DrawObjectInfoAt(drawList, objInfo, groupPos, objects.Count, currentPage);
