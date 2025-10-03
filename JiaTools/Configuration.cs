@@ -28,6 +28,7 @@ public class Configuration : IPluginConfiguration
     public bool ShowCastInfo { get; set; } = true;
     public bool ShowStatusList { get; set; } = true;
     public bool ShowHealth { get; set; } = true;
+    public bool ShowMana { get; set; } = true;
 
     public void Save()
     {

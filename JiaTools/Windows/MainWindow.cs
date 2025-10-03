@@ -122,7 +122,8 @@ public class MainWindow : Window, IDisposable
                             !string.IsNullOrEmpty(copyValue))
                         {
                             ImGui.SetClipboardText(copyValue);
-                            DService.Chat.Print($"已复制: {copyValue}");
+                            HelpersOm.NotificationInfo($"已复制: {copyValue}");
+                            HelpersOm.Debug($"已复制: {copyValue}");
                             clickedLine = true;
                             break;
                         }
@@ -186,6 +187,19 @@ public class MainWindow : Window, IDisposable
                 $"{objInfo.CurrentHP}/{objInfo.MaxHP}"));
         }
 
+        if (config.ShowMana && objInfo.CurrentMp > 0)
+        {
+            var manaPercentage = objInfo.MaxMp > 0 ? (float)objInfo.CurrentMp / objInfo.MaxMp : 0f;
+            var manaColor = manaPercentage switch
+            {
+                > 0.7f => Blue,
+                > 0.3f => Purple,
+                _ => DarkPurple
+            };
+            lines.Add(($"魔法值: {objInfo.CurrentMp:N0}/{objInfo.MaxMp:N0} ({manaPercentage:P0})", manaColor,
+                $"{objInfo.CurrentMp}/{objInfo.MaxMp}"));
+        }
+
         if (config.ShowCastInfo && objInfo.IsCasting)
         {
             lines.Add(("正在咏唱", Orange, ""));
@@ -242,16 +256,23 @@ public class MainWindow : Window, IDisposable
         if (lines.Count == 0) return (Vector2.Zero, Vector2.Zero, []);
 
         var fontSize = 13f * config.FontScale;
-        var lineHeight = fontSize + 2f;
-        var maxWidth = fontSize * 18;
-        var totalHeight = lines.Count * lineHeight + 8f;
-        var bgMin = position + new Vector2(-4, -4);
-        var bgMax = position + new Vector2(maxWidth + 4, totalHeight + 4);
-        var bgColor = ImGui.ColorConvertFloat4ToU32(new Vector4(0, 0, 0, config.Opacity * 0.85f));
-        var borderColor = ImGui.ColorConvertFloat4ToU32(new Vector4(0.5f, 0.5f, 0.5f, config.Opacity * 0.7f));
+        var lineHeight = fontSize + 4f;
+        var maxWidth = fontSize * 20;
+        var padding = new Vector2(8, 6);
+        var totalHeight = lines.Count * lineHeight + padding.Y * 2;
+        var bgMin = position - padding;
+        var bgMax = position + new Vector2(maxWidth + padding.X, totalHeight);
 
-        drawList.AddRectFilled(bgMin, bgMax, bgColor);
-        drawList.AddRect(bgMin, bgMax, borderColor, 2f);
+        // background
+        var bgColorTop = ImGui.ColorConvertFloat4ToU32(new Vector4(0.05f, 0.05f, 0.08f, config.Opacity * 0.92f));
+        var bgColorBottom = ImGui.ColorConvertFloat4ToU32(new Vector4(0.02f, 0.02f, 0.04f, config.Opacity * 0.95f));
+        drawList.AddRectFilledMultiColor(bgMin, bgMax, bgColorTop, bgColorTop, bgColorBottom, bgColorBottom);
+
+        // border
+        var borderColor1 = ImGui.ColorConvertFloat4ToU32(new Vector4(0.3f, 0.5f, 0.8f, config.Opacity * 0.6f));
+        var borderColor2 = ImGui.ColorConvertFloat4ToU32(new Vector4(0.2f, 0.3f, 0.5f, config.Opacity * 0.3f));
+        drawList.AddRect(bgMin - new Vector2(1, 1), bgMax + new Vector2(1, 1), borderColor2, 4f, ImDrawFlags.None, 2f);
+        drawList.AddRect(bgMin, bgMax, borderColor1, 4f, ImDrawFlags.None, 1.5f);
 
         var currentPos = position;
         var mousePos = ImGui.GetMousePos();
@@ -273,8 +294,10 @@ public class MainWindow : Window, IDisposable
             if (!string.IsNullOrEmpty(copyValue) &&
                 mousePos.X >= lineMin.X && mousePos.X <= lineMax.X &&
                 mousePos.Y >= lineMin.Y && mousePos.Y <= lineMax.Y)
-                drawList.AddRectFilled(lineMin, lineMax,
-                    ImGui.ColorConvertFloat4ToU32(new Vector4(1, 1, 1, 0.1f)));
+            {
+                var hoverColor = ImGui.ColorConvertFloat4ToU32(new Vector4(0.3f, 0.5f, 0.8f, 0.15f));
+                drawList.AddRectFilled(lineMin, lineMax, hoverColor, 2f);
+            }
 
             drawList.AddText(font, scaledSize, currentPos, textColor, text);
             currentPos.Y += lineHeight;
@@ -316,7 +339,9 @@ public class MainWindow : Window, IDisposable
 
         if (obj is not IBattleChara battleChara) return objInfo;
         objInfo.CurrentHP = battleChara.CurrentHp;
+        objInfo.CurrentMp = battleChara.CurrentMp;
         objInfo.MaxHP = battleChara.MaxHp;
+        objInfo.MaxMp = battleChara.MaxMp;
         objInfo.IsCasting = battleChara.IsCasting;
         objInfo.CastActionID = battleChara.CastActionId;
         objInfo.CurrentCastTime = battleChara.CurrentCastTime;
@@ -365,7 +390,9 @@ public class MainWindow : Window, IDisposable
         public float Rotation { get; init; }
         public float Distance { get; init; }
         public uint CurrentHP { get; set; }
+        public uint CurrentMp { get; set; }
         public uint MaxHP { get; set; }
+        public uint MaxMp { get; set; }
         public bool IsCasting { get; set; }
         public uint CastActionID { get; set; }
         public float CurrentCastTime { get; set; }
