@@ -29,13 +29,16 @@ public class MainWindow : Window, IDisposable
 
     public void Dispose() { }
 
+
     public void OnUpdate()
     {
         if (!config.Enabled) return;
         if (!IsScreenReady() || BetweenAreas) return;
 
-        var localPlayer = DService.ObjectTable.LocalPlayer;
-        if (localPlayer == null) return;
+        try
+        {
+            var localPlayer = DService.ObjectTable.LocalPlayer;
+            if (localPlayer == null) return;
 
         CachedGameObjects.Clear();
         OverlayPositions.Clear();
@@ -74,6 +77,11 @@ public class MainWindow : Window, IDisposable
             else
                 GroupedObjects[screenPos] = [objInfo];
         }
+        }
+        catch (Exception ex)
+        {
+            HelpersOm.Error($"Error in OnUpdate: {ex.Message}", ex);
+        }
     }
 
     public override void Draw()
@@ -82,7 +90,9 @@ public class MainWindow : Window, IDisposable
         if (!IsScreenReady() || BetweenAreas) return;
         if (CachedGameObjects.Count == 0) return;
 
-        var drawList = ImGui.GetForegroundDrawList();
+        try
+        {
+            var drawList = ImGui.GetForegroundDrawList();
 
         foreach (var (groupPos, objects) in GroupedObjects)
         {
@@ -119,41 +129,91 @@ public class MainWindow : Window, IDisposable
 
             ImGui.SetNextWindowPos(bgMin);
             ImGui.SetNextWindowSize(bgMax - bgMin);
+            
+
+            var windowID = $"##JiaTools_{groupPos.X:F0}_{groupPos.Y:F0}";
+            
+
+            ImGui.SetNextWindowPos(bgMin, ImGuiCond.Always);
+            ImGui.SetNextWindowSize(bgMax - bgMin, ImGuiCond.Always);
+            
+
+            var windowFlags = ImGuiWindowFlags.NoDecoration | 
+                             ImGuiWindowFlags.NoSavedSettings |
+                             ImGuiWindowFlags.NoFocusOnAppearing |
+                             ImGuiWindowFlags.NoNav;
+            
+
             ImGui.PushStyleVar(ImGuiStyleVar.WindowPadding, Vector2.Zero);
             ImGui.PushStyleColor(ImGuiCol.WindowBg, 0);
             ImGui.PushStyleColor(ImGuiCol.Border, 0);
-
-            if (ImGui.Begin($"##Interact_{groupPos.X}_{groupPos.Y}",
-                ImGuiWindowFlags.NoDecoration | ImGuiWindowFlags.NoSavedSettings |
-                ImGuiWindowFlags.NoFocusOnAppearing | ImGuiWindowFlags.NoNav))
+            
+            try
             {
-                if (ImGui.IsWindowHovered() && ImGui.IsMouseClicked(ImGuiMouseButton.Left))
-                {
-                    var mousePos = ImGui.GetMousePos();
-                    var clickedLine = false;
+                if (ImGui.Begin(windowID, windowFlags))
+                    HandleClickEventsSafely(lineRects, objects, currentPage, groupPos);
 
-                    foreach (var (lineMin, lineMax, copyValue) in lineRects)
-                    {
-                        if (mousePos.X >= lineMin.X && mousePos.X <= lineMax.X &&
-                            mousePos.Y >= lineMin.Y && mousePos.Y <= lineMax.Y &&
-                            !string.IsNullOrEmpty(copyValue))
-                        {
-                            ImGui.SetClipboardText(copyValue);
-                            HelpersOm.NotificationInfo($"已复制: {copyValue}");
-                            HelpersOm.Debug($"已复制: {copyValue}");
-                            clickedLine = true;
-                            break;
-                        }
-                    }
-
-                    if (!clickedLine && objects.Count > 1)
-                        GroupCurrentPage[groupPos] = (currentPage + 1) % objects.Count;
-                }
                 ImGui.End();
             }
+            finally
+            {
+                ImGui.PopStyleColor(2);
+                ImGui.PopStyleVar();
+            }
+        }
+        }
+        catch (Exception ex)
+        {
+            HelpersOm.Error($"Error in Draw: {ex.Message}", ex);
+        }
+    }
 
-            ImGui.PopStyleColor(2);
-            ImGui.PopStyleVar();
+    private void HandleClickEventsSafely(List<(Vector2 lineMin, Vector2 lineMax, string copyValue)> lineRects, 
+        List<GameObjectInfo> objects, int currentPage, Vector2 groupPos)
+    {
+        try
+        {
+            if (!ImGui.IsWindowHovered()) return;
+
+            if (!ImGui.IsMouseClicked(ImGuiMouseButton.Left)) return;
+
+            var mousePos = ImGui.GetMousePos();
+            var clickedLine = false;
+
+            if (lineRects != null)
+            {
+                foreach (var (lineMin, lineMax, copyValue) in lineRects)
+                {
+                    if (mousePos.X >= lineMin.X && mousePos.X <= lineMax.X &&
+                        mousePos.Y >= lineMin.Y && mousePos.Y <= lineMax.Y &&
+                        !string.IsNullOrEmpty(copyValue))
+                    {
+                        try
+                        {
+                            ImGui.SetClipboardText(copyValue);
+                            //DService.Chat.Print($"已复制: {copyValue}");
+                            HelpersOm.NotificationInfo($"已复制: {copyValue}");
+                            HelpersOm.Debug($"已复制: {copyValue}");
+                        }
+                        catch (Exception ex)
+                        {
+                            HelpersOm.Error($"复制失败: {ex.Message}", ex);
+                        }
+                        clickedLine = true;
+                        break;
+                    }
+                }
+            }
+
+            if (!clickedLine && objects.Count > 1)
+            {
+                var newPage = (currentPage + 1) % objects.Count;
+                GroupCurrentPage[groupPos] = newPage;
+            }
+        }
+        catch (Exception ex)
+        {
+            HelpersOm.Error($"Error in HandleClickEventsSafely: {ex.Message}", ex);
         }
     }
 
@@ -366,10 +426,21 @@ public class MainWindow : Window, IDisposable
 
         if (battleChara.IsCasting)
         {
-            unsafe
+            try
             {
-                var character = (Character*)obj.Address;
-                objInfo.CastRotation = character->CastRotation;
+                unsafe
+                {
+                    if (obj.Address != nint.Zero)
+                    {
+                        var character = (Character*)obj.Address;
+                        objInfo.CastRotation = character->CastRotation;
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                HelpersOm.Debug($"Failed to access cast rotation for object {obj.EntityId}: {ex.Message}");
+                objInfo.CastRotation = null;
             }
 
             var castTargetID = battleChara.CastTargetObjectId;
