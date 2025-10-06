@@ -45,9 +45,9 @@ public sealed class Plugin : IDalamudPlugin
                 NativeController = nativeController,
             };
 
-            DService.UiBuilder.Draw += windowSystem.Draw;
-            DService.UiBuilder.OpenConfigUi += () => nativeConfigWindow.Toggle();
-            DService.UiBuilder.OpenMainUi += () =>
+            DService.UIBuilder.Draw += windowSystem.Draw;
+            DService.UIBuilder.OpenConfigUi += () => nativeConfigWindow.Toggle();
+            DService.UIBuilder.OpenMainUi += () =>
             {
                 configuration.Enabled = !configuration.Enabled;
                 configuration.Save();
