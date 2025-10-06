@@ -54,7 +54,7 @@ public class MainWindow : Window, IDisposable
 
             if (DService.Gui == null || !DService.Gui.WorldToScreen(obj.Position, out var screenPos)) continue;
             var objInfo = CreateGameObjectInfo(obj);
-            CachedGameObjects.Add(objInfo);
+            if (objInfo != null) CachedGameObjects.Add(objInfo);
             OverlayPositions[obj.EntityID] = screenPos;
             if (CachedGameObjects.Count >= config.MaxObjects) break;
         }
@@ -82,7 +82,7 @@ public class MainWindow : Window, IDisposable
         }
         catch (Exception ex)
         {
-            HelpersOm.Error($"Error in OnUpdate: {ex.Message}", ex);
+            Error($"Error in OnUpdate: {ex.Message}", ex);
         }
     }
 
@@ -166,11 +166,11 @@ public class MainWindow : Window, IDisposable
         }
         catch (Exception ex)
         {
-            HelpersOm.Error($"Error in Draw: {ex.Message}", ex);
+            Error($"Error in Draw: {ex.Message}", ex);
         }
     }
 
-    private void HandleClickEventsSafely(List<(Vector2 lineMin, Vector2 lineMax, string copyValue)> lineRects, 
+    private static void HandleClickEventsSafely(List<(Vector2 lineMin, Vector2 lineMax, string copyValue)> lineRects, 
         List<GameObjectInfo> objects, int currentPage, Vector2 groupPos)
     {
         try
@@ -215,7 +215,7 @@ public class MainWindow : Window, IDisposable
         }
         catch (Exception ex)
         {
-            HelpersOm.Error($"Error in HandleClickEventsSafely: {ex.Message}", ex);
+            Error($"Error in HandleClickEventsSafely: {ex.Message}", ex);
         }
     }
 
@@ -409,79 +409,85 @@ public class MainWindow : Window, IDisposable
         };
     }
 
-    private static GameObjectInfo CreateGameObjectInfo(IGameObject obj)
+    private static GameObjectInfo? CreateGameObjectInfo(IGameObject obj)
     {
         var localPlayer = DService.ObjectTable?.LocalPlayer;
         var distance = localPlayer?.Position != null && obj?.Position != null
             ? Vector3.Distance(localPlayer.Position, obj.Position)
             : -1f;
 
-        var objInfo = new GameObjectInfo
+        if (obj != null)
         {
-            EntityID = obj.EntityID,
-            DataID = obj.DataID,
-            Name = obj.Name?.TextValue ?? string.Empty,
-            ObjectKind = obj.ObjectKind,
-            Position = obj.Position,
-            Rotation = obj.Rotation,
-            Distance = distance
-        };
-
-        if (obj is not IBattleChara battleChara) return objInfo;
-        objInfo.CurrentHP = battleChara.CurrentHp;
-        objInfo.CurrentMp = battleChara.CurrentMp;
-        objInfo.MaxHP = battleChara.MaxHp;
-        objInfo.MaxMp = battleChara.MaxMp;
-        objInfo.IsCasting = battleChara.IsCasting;
-        objInfo.CastActionID = battleChara.CastActionID;
-        objInfo.CurrentCastTime = battleChara.CurrentCastTime;
-        objInfo.TotalCastTime = battleChara.TotalCastTime;
-
-        if (battleChara.IsCasting)
-        {
-            try
+            var objInfo = new GameObjectInfo
             {
-                unsafe
+                EntityID = obj.EntityID,
+                DataID = obj.DataID,
+                Name = obj.Name?.TextValue ?? string.Empty,
+                ObjectKind = obj.ObjectKind,
+                Position = obj.Position,
+                Rotation = obj.Rotation,
+                Distance = distance
+            };
+
+            if (obj is not IBattleChara battleChara) return objInfo;
+            objInfo.CurrentHP = battleChara.CurrentHp;
+            objInfo.CurrentMp = battleChara.CurrentMp;
+            objInfo.MaxHP = battleChara.MaxHp;
+            objInfo.MaxMp = battleChara.MaxMp;
+            objInfo.IsCasting = battleChara.IsCasting;
+            objInfo.CastActionID = battleChara.CastActionID;
+            objInfo.CurrentCastTime = battleChara.CurrentCastTime;
+            objInfo.TotalCastTime = battleChara.TotalCastTime;
+
+            if (battleChara.IsCasting)
+            {
+                try
                 {
-                    if (obj.Address != nint.Zero)
+                    unsafe
                     {
-                        var character = (Character*)obj.Address;
-                        objInfo.CastRotation = character->CastRotation;
+                        if (obj.Address != nint.Zero)
+                        {
+                            var character = (Character*)obj.Address;
+                            objInfo.CastRotation = character->CastRotation;
+                        }
                     }
                 }
-            }
-            catch (Exception ex)
-            {
-                HelpersOm.Debug($"Failed to access cast rotation for object {obj.EntityID}: {ex.Message}");
-                objInfo.CastRotation = null;
-            }
-
-            var castTargetID = battleChara.CastTargetObjectID;
-            if (castTargetID != 0)
-            {
-                var castTarget = DService.ObjectTable?.SearchByID(castTargetID);
-                objInfo.CastTargetName = castTarget?.Name?.TextValue ?? $"ID:{castTargetID}";
-            }
-            else
-                objInfo.CastTargetName = "无目标";
-        }
-
-        objInfo.StatusEffects.Clear();
-        if (battleChara.StatusList != null)
-        {
-            foreach (var status in battleChara.StatusList)
-            {
-                if (status.StatusID == 0) continue;
-                objInfo.StatusEffects.Add(new StatusInfo
+                catch (Exception ex)
                 {
-                    StatusID = status.StatusID,
-                    RemainingTime = status.RemainingTime,
-                    Param = status.Param
-                });
-            }
-        }
+                    Debug($"Failed to access cast rotation for object {obj.EntityID}: {ex.Message}");
+                    objInfo.CastRotation = null;
+                }
 
-        return objInfo;
+                var castTargetID = battleChara.CastTargetObjectID;
+                if (castTargetID != 0)
+                {
+                    var castTarget = DService.ObjectTable?.SearchByID(castTargetID);
+                    objInfo.CastTargetName = castTarget?.Name?.TextValue ?? $"ID:{castTargetID}";
+                }
+                else
+                    objInfo.CastTargetName = "无目标";
+            }
+
+            objInfo.StatusEffects.Clear();
+            if (battleChara.StatusList != null)
+            {
+                foreach (var status in battleChara.StatusList)
+                {
+                    if (status.StatusID == 0) continue;
+                    objInfo.StatusEffects.Add(new StatusInfo
+                    {
+                        StatusID = status.StatusID,
+                        RemainingTime = status.RemainingTime,
+                        Param = status.Param
+                    });
+                }
+            }
+
+            return objInfo;
+        }
+        
+        Error("GameObjectInfo is Null");
+        return null;
     }
 
     private class GameObjectInfo

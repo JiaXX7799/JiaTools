@@ -180,7 +180,7 @@ public class ConfigWindow : Window, IDisposable
         config.ShowEventNpcs = DrawStyledCheckbox("显示事件NPC(EventNpc)", config.ShowEventNpcs, "显示任务相关NPC", new Vector4(1.0f, 0.8f, 0.4f, 1.0f));
         config.ShowEventObjs = DrawStyledCheckbox("显示事件对象(EventObj)", config.ShowEventObjs, "显示可交互的对象", new Vector4(0.8f, 0.4f, 1.0f, 1.0f));
 
-        ImGui.Columns(1);
+        ImGui.Columns();
 
         ImGui.EndChild();
     }
@@ -211,12 +211,12 @@ public class ConfigWindow : Window, IDisposable
         config.ShowCastInfo = DrawStyledCheckbox("咏唱信息", config.ShowCastInfo, "当前咏唱的技能详细信息", new Vector4(1.0f, 0.6f, 0.9f, 1.0f));
         config.ShowStatusList = DrawStyledCheckbox("状态列表", config.ShowStatusList, "Buff和Debuff\n(最多显示5个)", new Vector4(0.9f, 0.6f, 1.0f, 1.0f));
 
-        ImGui.Columns(1);
+        ImGui.Columns();
 
         ImGui.EndChild();
     }
 
-    private void DrawSectionHeader(string text, uint color = 0xFFFFCC66)
+    private static void DrawSectionHeader(string text, uint color = 0xFFFFCC66)
     {
         ImGui.PushStyleColor(ImGuiCol.Text, color);
         ImGui.Text($"■ {text}");
@@ -224,7 +224,7 @@ public class ConfigWindow : Window, IDisposable
         ImGui.Spacing();
     }
 
-    private bool DrawStyledCheckbox(string label, bool value, string tooltip, Vector4 color)
+    private static bool DrawStyledCheckbox(string label, bool value, string tooltip, Vector4 color)
     {
         if (string.IsNullOrEmpty(label)) return value;
         ImGui.PushStyleColor(ImGuiCol.CheckMark, color);
@@ -235,7 +235,7 @@ public class ConfigWindow : Window, IDisposable
         return value;
     }
 
-    private void DrawTooltip(string text)
+    private static void DrawTooltip(string text)
     {
         if (string.IsNullOrEmpty(text) || !ImGui.IsItemHovered()) return;
         ImGui.BeginTooltip();

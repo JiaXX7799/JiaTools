@@ -1,5 +1,5 @@
 {
-  "Author": "JiaXX, Veever",
+  "Author": "JiaXX, Veever, cyf",
   "Name": "JiaTools",
   "Punchline": "在游戏中显示对象的详细信息",
   "Description": "在游戏中显示对象的详细信息，包括玩家、NPC、事件对象等的 EntityID、DataID、位置、旋转、距离、生命值、咏唱信息、状态效果等。",
@@ -16,5 +16,5 @@
   "CanUnloadAsync": false,
   "LoadPriority": 0,
   "IconUrl": "https://raw.githubusercontent.com/JiaXX7799/DalamudPlugins/main/plugins/JiaTools/icon.png",
-  "Changelog": "Try to use Native UI"
+  "Changelog": "Try to save VV"
 }

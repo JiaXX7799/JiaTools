@@ -46,10 +46,10 @@ public unsafe class NativeConfigWindow(Configuration config) : NativeAddon
 
     // 对象详情
     private string objectFilterText = "";
-    private List<TextNode> objectListNodes = new();
-    private int updateCounter = 0;
-    private Vector2 normalSize = new(350, 600);
-    private Vector2 expandedSize = new(800, 800);
+    private List<TextNode> objectListNodes = [];
+    private int updateCounter;
+    private readonly Vector2 normalSize = new(350, 600);
+    private readonly Vector2 expandedSize = new(800, 800);
 
     protected override void OnSetup(AtkUnitBase* addon)
     {

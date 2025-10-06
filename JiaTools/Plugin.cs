@@ -9,7 +9,7 @@ namespace JiaTools;
 
 public sealed class Plugin : IDalamudPlugin
 {
-    public string Name => "JiaTools";
+    public static string Name => "JiaTools";
 
     private readonly WindowSystem windowSystem;
     private readonly Configuration configuration;
