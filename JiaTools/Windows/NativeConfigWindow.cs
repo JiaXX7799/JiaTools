@@ -13,9 +13,9 @@ public unsafe class NativeConfigWindow(Configuration config) : NativeAddon
 {
     private TabBarNode? tabBar;
 
-    private ScrollingAreaNode<TreeListNode>? generalScrollArea;
-    private ScrollingAreaNode<TreeListNode>? objectTypeScrollArea;
-    private ScrollingAreaNode<TreeListNode>? displayScrollArea;
+    private ScrollingAreaNode<VerticalListNode>? generalScrollArea;
+    private ScrollingAreaNode<VerticalListNode>? objectTypeScrollArea;
+    private ScrollingAreaNode<VerticalListNode>? displayScrollArea;
     private ScrollingAreaNode<ResNode>? objectDetailScrollArea;
 
     // 常规设置
@@ -63,7 +63,7 @@ public unsafe class NativeConfigWindow(Configuration config) : NativeAddon
         var tabContentY = ContentStartPosition.Y + 40;
         var tabContentHeight = ContentSize.Y - 40;
 
-        AttachNode(generalScrollArea = new ScrollingAreaNode<TreeListNode>
+        AttachNode(generalScrollArea = new ScrollingAreaNode<VerticalListNode>
         {
             Position = new Vector2(ContentStartPosition.X, tabContentY),
             Size = new Vector2(ContentSize.X, tabContentHeight),
@@ -72,7 +72,7 @@ public unsafe class NativeConfigWindow(Configuration config) : NativeAddon
             IsVisible = true,
         });
 
-        AttachNode(objectTypeScrollArea = new ScrollingAreaNode<TreeListNode>
+        AttachNode(objectTypeScrollArea = new ScrollingAreaNode<VerticalListNode>
         {
             Position = new Vector2(ContentStartPosition.X, tabContentY),
             Size = new Vector2(ContentSize.X, tabContentHeight),
@@ -81,7 +81,7 @@ public unsafe class NativeConfigWindow(Configuration config) : NativeAddon
             IsVisible = false,
         });
 
-        AttachNode(displayScrollArea = new ScrollingAreaNode<TreeListNode>
+        AttachNode(displayScrollArea = new ScrollingAreaNode<VerticalListNode>
         {
             Position = new Vector2(ContentStartPosition.X, tabContentY),
             Size = new Vector2(ContentSize.X, tabContentHeight),
@@ -156,15 +156,8 @@ public unsafe class NativeConfigWindow(Configuration config) : NativeAddon
             mergeDistanceSlider.Width = 300.0f;
     }
 
-    private void SetupGeneralSettings(TreeListNode treeList)
+    private void SetupGeneralSettings(VerticalListNode category)
     {
-        var category = new TreeListCategoryNode
-        {
-            IsVisible = true,
-            IsCollapsed = false,
-        };
-        treeList.AddCategoryNode(category);
-
         category.AddNode(new TextNode
         {
             Size = new Vector2(300, 20),
@@ -285,15 +278,8 @@ public unsafe class NativeConfigWindow(Configuration config) : NativeAddon
         });
     }
 
-    private void SetupObjectTypeSettings(TreeListNode treeList)
+    private void SetupObjectTypeSettings(VerticalListNode category)
     {
-        var category = new TreeListCategoryNode
-        {
-            IsVisible = true,
-            IsCollapsed = false,
-        };
-        treeList.AddCategoryNode(category);
-
         category.AddNode(new TextNode
         {
             Size = new Vector2(300, 20),
@@ -370,15 +356,8 @@ public unsafe class NativeConfigWindow(Configuration config) : NativeAddon
         });
     }
 
-    private void SetupDisplaySettings(TreeListNode treeList)
+    private void SetupDisplaySettings(VerticalListNode category)
     {
-        var category = new TreeListCategoryNode
-        {
-            IsVisible = true,
-            IsCollapsed = false,
-        };
-        treeList.AddCategoryNode(category);
-
         category.AddNode(new TextNode
         {
             Size = new Vector2(300, 20),
