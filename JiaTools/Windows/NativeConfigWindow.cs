@@ -67,7 +67,7 @@ public unsafe class NativeConfigWindow(Configuration config) : NativeAddon
         treeList.AddCategoryNode(objectTypeCategory = new TreeListCategoryNode
         {
             IsVisible = true,
-            IsCollapsed = true,
+            IsCollapsed = false,
             String = "对象类型",
         });
 
@@ -77,7 +77,7 @@ public unsafe class NativeConfigWindow(Configuration config) : NativeAddon
         treeList.AddCategoryNode(displayCategory = new TreeListCategoryNode
         {
             IsVisible = true,
-            IsCollapsed = true,
+            IsCollapsed = false,
             String = "显示选项",
         });
 
