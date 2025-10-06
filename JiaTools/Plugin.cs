@@ -68,7 +68,10 @@ public sealed class Plugin : IDalamudPlugin
         }
         catch (Exception ex)
         {
-            DService.Log?.Error(ex, "Failed to initialize JiaTools");
+            if (DService.Log != null)
+                DService.Log.Error(ex, "Failed to initialize JiaTools");
+            else
+                throw new InvalidOperationException("Failed to initialize JiaTools and logging is unavailable", ex);
             throw;
         }
     }
@@ -79,7 +82,7 @@ public sealed class Plugin : IDalamudPlugin
         configuration.Save();
 
         var status = configuration.Enabled ? "已开启" : "已关闭";
-        DService.Chat.Print($"[JiaTools] 悬浮窗{status}");
+        DService.Chat?.Print($"[JiaTools] 悬浮窗{status}");
     }
 
     private void OnConfigCommand(string command, string args)
@@ -94,9 +97,14 @@ public sealed class Plugin : IDalamudPlugin
 
     public void Dispose()
     {
-        DService.Command.RemoveHandler("/jtools");
-        DService.Command.RemoveHandler("/jconfig");
-        DService.Framework.Update -= OnFrameworkUpdate;
+        if (DService.Command != null)
+        {
+            DService.Command.RemoveHandler("/jtools");
+            DService.Command.RemoveHandler("/jconfig");
+        }
+
+        if (DService.Framework != null)
+            DService.Framework.Update -= OnFrameworkUpdate;
 
         // Dispose Native UI components
         nativeConfigWindow.Dispose();

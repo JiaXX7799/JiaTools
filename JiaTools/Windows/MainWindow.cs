@@ -37,6 +37,7 @@ public class MainWindow : Window, IDisposable
 
         try
         {
+            if (DService.ObjectTable == null) return;
             var localPlayer = DService.ObjectTable.LocalPlayer;
             if (localPlayer == null) return;
 
@@ -47,10 +48,11 @@ public class MainWindow : Window, IDisposable
         foreach (var obj in DService.ObjectTable)
         {
             if (obj.EntityID == 0) continue;
+            if (localPlayer?.Position == null || obj?.Position == null) continue;
             if (Vector3.Distance(localPlayer.Position, obj.Position) > config.Range) continue;
             if (!ShouldShowObject(obj)) continue;
 
-            if (!DService.Gui.WorldToScreen(obj.Position, out var screenPos)) continue;
+            if (DService.Gui == null || !DService.Gui.WorldToScreen(obj.Position, out var screenPos)) continue;
             var objInfo = CreateGameObjectInfo(obj);
             CachedGameObjects.Add(objInfo);
             OverlayPositions[obj.EntityID] = screenPos;
@@ -393,11 +395,12 @@ public class MainWindow : Window, IDisposable
 
     private bool ShouldShowObject(IGameObject obj)
     {
+        if (DService.ObjectTable?.LocalPlayer == null) return false;
         var localPlayer = DService.ObjectTable.LocalPlayer;
 
         return obj.ObjectKind switch
         {
-            ObjectKind.Player when obj.Equals(localPlayer) => config.ShowLocalPlayer,
+            ObjectKind.Player when obj != null && localPlayer != null && obj.Equals(localPlayer) => config.ShowLocalPlayer,
             ObjectKind.Player => config.ShowPlayers,
             ObjectKind.BattleNpc => config.ShowBattleNpcs,
             ObjectKind.EventNpc => config.ShowEventNpcs,
@@ -408,14 +411,16 @@ public class MainWindow : Window, IDisposable
 
     private static GameObjectInfo CreateGameObjectInfo(IGameObject obj)
     {
-        var localPlayer = DService.ObjectTable.LocalPlayer;
-        var distance = localPlayer != null ? Vector3.Distance(localPlayer.Position, obj.Position) : -1f;
+        var localPlayer = DService.ObjectTable?.LocalPlayer;
+        var distance = localPlayer?.Position != null && obj?.Position != null
+            ? Vector3.Distance(localPlayer.Position, obj.Position)
+            : -1f;
 
         var objInfo = new GameObjectInfo
         {
             EntityID = obj.EntityID,
             DataID = obj.DataID,
-            Name = obj.Name.TextValue,
+            Name = obj.Name?.TextValue ?? string.Empty,
             ObjectKind = obj.ObjectKind,
             Position = obj.Position,
             Rotation = obj.Rotation,
@@ -454,23 +459,26 @@ public class MainWindow : Window, IDisposable
             var castTargetID = battleChara.CastTargetObjectID;
             if (castTargetID != 0)
             {
-                var castTarget = DService.ObjectTable.SearchByID(castTargetID);
-                objInfo.CastTargetName = castTarget?.Name.TextValue ?? $"ID:{castTargetID}";
+                var castTarget = DService.ObjectTable?.SearchByID(castTargetID);
+                objInfo.CastTargetName = castTarget?.Name?.TextValue ?? $"ID:{castTargetID}";
             }
             else
                 objInfo.CastTargetName = "无目标";
         }
 
         objInfo.StatusEffects.Clear();
-        foreach (var status in battleChara.StatusList)
+        if (battleChara.StatusList != null)
         {
-            if (status.StatusID == 0) continue;
-            objInfo.StatusEffects.Add(new StatusInfo
+            foreach (var status in battleChara.StatusList)
             {
-                StatusID = status.StatusID,
-                RemainingTime = status.RemainingTime,
-                Param = status.Param
-            });
+                if (status.StatusID == 0) continue;
+                objInfo.StatusEffects.Add(new StatusInfo
+                {
+                    StatusID = status.StatusID,
+                    RemainingTime = status.RemainingTime,
+                    Param = status.Param
+                });
+            }
         }
 
         return objInfo;

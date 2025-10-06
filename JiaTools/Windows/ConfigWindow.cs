@@ -226,6 +226,7 @@ public class ConfigWindow : Window, IDisposable
 
     private bool DrawStyledCheckbox(string label, bool value, string tooltip, Vector4 color)
     {
+        if (string.IsNullOrEmpty(label)) return value;
         ImGui.PushStyleColor(ImGuiCol.CheckMark, color);
         var changed = ImGui.Checkbox(label, ref value);
         ImGui.PopStyleColor();
@@ -236,13 +237,11 @@ public class ConfigWindow : Window, IDisposable
 
     private void DrawTooltip(string text)
     {
-        if (ImGui.IsItemHovered())
-        {
-            ImGui.BeginTooltip();
-            ImGui.PushTextWrapPos(300);
-            ImGui.TextUnformatted(text);
-            ImGui.PopTextWrapPos();
-            ImGui.EndTooltip();
-        }
+        if (string.IsNullOrEmpty(text) || !ImGui.IsItemHovered()) return;
+        ImGui.BeginTooltip();
+        ImGui.PushTextWrapPos(300);
+        ImGui.TextUnformatted(text);
+        ImGui.PopTextWrapPos();
+        ImGui.EndTooltip();
     }
 }

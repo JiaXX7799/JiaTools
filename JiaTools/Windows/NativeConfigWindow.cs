@@ -56,8 +56,8 @@ public unsafe class NativeConfigWindow(Configuration config) : NativeAddon
         AttachNode(tabBar = new TabBarNode
         {
             Position = ContentStartPosition,
-            Size = new Vector2(ContentSize.X, 32),
-            IsVisible = true,
+            Size = ContentSize with { Y = 32 },
+            IsVisible = true
         });
 
         var tabContentY = ContentStartPosition.Y + 40;
@@ -65,38 +65,38 @@ public unsafe class NativeConfigWindow(Configuration config) : NativeAddon
 
         AttachNode(generalScrollArea = new ScrollingAreaNode<VerticalListNode>
         {
-            Position = new Vector2(ContentStartPosition.X, tabContentY),
-            Size = new Vector2(ContentSize.X, tabContentHeight),
+            Position = ContentStartPosition with { Y = tabContentY },
+            Size = ContentSize with { Y = tabContentHeight },
             ContentHeight = 600.0f,
             ScrollSpeed = 25,
-            IsVisible = true,
+            IsVisible = true
         });
 
         AttachNode(objectTypeScrollArea = new ScrollingAreaNode<VerticalListNode>
         {
-            Position = new Vector2(ContentStartPosition.X, tabContentY),
-            Size = new Vector2(ContentSize.X, tabContentHeight),
+            Position = ContentStartPosition with { Y = tabContentY },
+            Size = ContentSize with { Y = tabContentHeight },
             ContentHeight = 400.0f,
             ScrollSpeed = 25,
-            IsVisible = false,
+            IsVisible = false
         });
 
         AttachNode(displayScrollArea = new ScrollingAreaNode<VerticalListNode>
         {
-            Position = new Vector2(ContentStartPosition.X, tabContentY),
-            Size = new Vector2(ContentSize.X, tabContentHeight),
+            Position = ContentStartPosition with { Y = tabContentY },
+            Size = ContentSize with { Y = tabContentHeight },
             ContentHeight = 600.0f,
             ScrollSpeed = 25,
-            IsVisible = false,
+            IsVisible = false
         });
 
         AttachNode(objectDetailScrollArea = new ScrollingAreaNode<ResNode>
         {
-            Position = new Vector2(ContentStartPosition.X, tabContentY),
-            Size = new Vector2(ContentSize.X, tabContentHeight),
+            Position = ContentStartPosition with { Y = tabContentY },
+            Size = ContentSize with { Y = tabContentHeight },
             ContentHeight = 800.0f,
             ScrollSpeed = 25,
-            IsVisible = false,
+            IsVisible = false
         });
 
         tabBar.AddTab("常规设置", () =>
@@ -139,10 +139,14 @@ public unsafe class NativeConfigWindow(Configuration config) : NativeAddon
             if (objectDetailScrollArea != null) objectDetailScrollArea.IsVisible = true;
         });
 
-        SetupGeneralSettings(generalScrollArea.ContentAreaNode);
-        SetupObjectTypeSettings(objectTypeScrollArea.ContentAreaNode);
-        SetupDisplaySettings(displayScrollArea.ContentAreaNode);
-        SetupObjectDetailTab(objectDetailScrollArea.ContentAreaNode);
+        if (generalScrollArea?.ContentAreaNode != null)
+            SetupGeneralSettings(generalScrollArea.ContentAreaNode);
+        if (objectTypeScrollArea?.ContentAreaNode != null)
+            SetupObjectTypeSettings(objectTypeScrollArea.ContentAreaNode);
+        if (displayScrollArea?.ContentAreaNode != null)
+            SetupDisplaySettings(displayScrollArea.ContentAreaNode);
+        if (objectDetailScrollArea?.ContentAreaNode != null)
+            SetupObjectDetailTab(objectDetailScrollArea.ContentAreaNode);
 
         if (opacitySlider != null)
             opacitySlider.Width = 300.0f;
@@ -158,6 +162,7 @@ public unsafe class NativeConfigWindow(Configuration config) : NativeAddon
 
     private void SetupGeneralSettings(VerticalListNode category)
     {
+        if (category == null) return;
         category.AddNode(new TextNode
         {
             Size = new Vector2(300, 20),
@@ -165,7 +170,7 @@ public unsafe class NativeConfigWindow(Configuration config) : NativeAddon
             FontType = FontType.Axis,
             FontSize = 14,
             String = "透明度",
-            TextColor = new Vector4(0.9f, 0.8f, 0.4f, 1.0f),
+            TextColor = new Vector4(0.9f, 0.8f, 0.4f, 1.0f)
         });
 
         category.AddNode(opacitySlider = new SliderNode
@@ -190,7 +195,7 @@ public unsafe class NativeConfigWindow(Configuration config) : NativeAddon
             FontType = FontType.Axis,
             FontSize = 14,
             String = "字体缩放",
-            TextColor = new Vector4(0.9f, 0.8f, 0.4f, 1.0f),
+            TextColor = new Vector4(0.9f, 0.8f, 0.4f, 1.0f)
         });
 
         category.AddNode(fontScaleSlider = new SliderNode
@@ -215,7 +220,7 @@ public unsafe class NativeConfigWindow(Configuration config) : NativeAddon
             FontType = FontType.Axis,
             FontSize = 14,
             String = "扫描范围 (米)",
-            TextColor = new Vector4(0.4f, 0.9f, 0.8f, 1.0f),
+            TextColor = new Vector4(0.4f, 0.9f, 0.8f, 1.0f)
         });
 
         category.AddNode(rangeSlider = new SliderNode
@@ -237,7 +242,7 @@ public unsafe class NativeConfigWindow(Configuration config) : NativeAddon
             FontType = FontType.Axis,
             FontSize = 14,
             String = "最大对象数",
-            TextColor = new Vector4(0.4f, 0.9f, 0.8f, 1.0f),
+            TextColor = new Vector4(0.4f, 0.9f, 0.8f, 1.0f)
         });
 
         category.AddNode(maxObjectsSlider = new SliderNode
@@ -262,7 +267,7 @@ public unsafe class NativeConfigWindow(Configuration config) : NativeAddon
             FontType = FontType.Axis,
             FontSize = 14,
             String = "合并距离 (像素)",
-            TextColor = new Vector4(0.4f, 0.9f, 0.8f, 1.0f),
+            TextColor = new Vector4(0.4f, 0.9f, 0.8f, 1.0f)
         });
 
         category.AddNode(mergeDistanceSlider = new SliderNode
@@ -280,6 +285,7 @@ public unsafe class NativeConfigWindow(Configuration config) : NativeAddon
 
     private void SetupObjectTypeSettings(VerticalListNode category)
     {
+        if (category == null) return;
         category.AddNode(new TextNode
         {
             Size = new Vector2(300, 20),
@@ -287,7 +293,7 @@ public unsafe class NativeConfigWindow(Configuration config) : NativeAddon
             FontType = FontType.Axis,
             FontSize = 12,
             String = "选择要在悬浮窗中显示的对象类型",
-            TextColor = new Vector4(0.7f, 0.7f, 0.7f, 1.0f),
+            TextColor = new Vector4(0.7f, 0.7f, 0.7f, 1.0f)
         });
 
         category.AddNode(showPlayersCheckbox = new CheckboxNode
@@ -358,6 +364,7 @@ public unsafe class NativeConfigWindow(Configuration config) : NativeAddon
 
     private void SetupDisplaySettings(VerticalListNode category)
     {
+        if (category == null) return;
         category.AddNode(new TextNode
         {
             Size = new Vector2(300, 20),
@@ -365,7 +372,7 @@ public unsafe class NativeConfigWindow(Configuration config) : NativeAddon
             FontType = FontType.Axis,
             FontSize = 12,
             String = "选择要显示的对象信息",
-            TextColor = new Vector4(0.7f, 0.7f, 0.7f, 1.0f),
+            TextColor = new Vector4(0.7f, 0.7f, 0.7f, 1.0f)
         });
 
         category.AddNode(showEntityIDCheckbox = new CheckboxNode
@@ -501,6 +508,7 @@ public unsafe class NativeConfigWindow(Configuration config) : NativeAddon
 
     private void SetupObjectDetailTab(ResNode contentNode)
     {
+        if (contentNode == null) return;
         var headerText = new TextNode
         {
             Position = new Vector2(10, 10),
@@ -509,7 +517,7 @@ public unsafe class NativeConfigWindow(Configuration config) : NativeAddon
             FontType = FontType.Axis,
             FontSize = 16,
             String = "对象列表",
-            TextColor = new Vector4(0.9f, 0.8f, 0.4f, 1.0f),
+            TextColor = new Vector4(0.9f, 0.8f, 0.4f, 1.0f)
         };
         AttachNode(headerText, contentNode);
 
@@ -532,7 +540,7 @@ public unsafe class NativeConfigWindow(Configuration config) : NativeAddon
                 FontType = FontType.Axis,
                 FontSize = 12,
                 String = text,
-                TextColor = new Vector4(0.7f, 0.9f, 0.7f, 1.0f),
+                TextColor = new Vector4(0.7f, 0.9f, 0.7f, 1.0f)
             };
             AttachNode(header, contentNode);
         }
@@ -541,13 +549,13 @@ public unsafe class NativeConfigWindow(Configuration config) : NativeAddon
 
     protected override void OnUpdate(AtkUnitBase* addon)
     {
-        if (opacitySlider != null && opacitySlider.Value != (int)(config.Opacity * 100))
+        if (opacitySlider?.ValueNode != null && opacitySlider.Value != (int)(config.Opacity * 100))
         {
             opacitySlider.Value = (int)(config.Opacity * 100);
             opacitySlider.ValueNode.String = $"{(int)(config.Opacity * 100)}%";
         }
 
-        if (fontScaleSlider != null && fontScaleSlider.Value != (int)(config.FontScale * 100))
+        if (fontScaleSlider?.ValueNode != null && fontScaleSlider.Value != (int)(config.FontScale * 100))
         {
             fontScaleSlider.Value = (int)(config.FontScale * 100);
             fontScaleSlider.ValueNode.String = $"{(int)(config.FontScale * 100)}%";
@@ -558,7 +566,7 @@ public unsafe class NativeConfigWindow(Configuration config) : NativeAddon
             rangeSlider.Value = (int)config.Range;
         }
 
-        if (maxObjectsSlider != null && maxObjectsSlider.Value != config.MaxObjects)
+        if (maxObjectsSlider?.ValueNode != null && maxObjectsSlider.Value != config.MaxObjects)
         {
             maxObjectsSlider.Value = config.MaxObjects;
             maxObjectsSlider.ValueNode.String = $"{config.MaxObjects}";
@@ -588,13 +596,18 @@ public unsafe class NativeConfigWindow(Configuration config) : NativeAddon
     {
         try
         {
+            if (WindowNode == null)
+            {
+                DService.Log?.Error("WindowNode is null in ResizeWindow");
+                return;
+            }
             WindowNode.Size = newSize;
             Size = newSize;
 
             if (tabBar != null)
             {
                 tabBar.Position = ContentStartPosition;
-                tabBar.Size = new Vector2(ContentSize.X, 32);
+                tabBar.Size = ContentSize with { Y = 32 };
             }
 
             var tabContentY = ContentStartPosition.Y + 40;
@@ -602,31 +615,31 @@ public unsafe class NativeConfigWindow(Configuration config) : NativeAddon
 
             if (generalScrollArea != null)
             {
-                generalScrollArea.Position = new Vector2(ContentStartPosition.X, tabContentY);
-                generalScrollArea.Size = new Vector2(ContentSize.X, tabContentHeight);
+                generalScrollArea.Position = ContentStartPosition with { Y = tabContentY };
+                generalScrollArea.Size = ContentSize with { Y = tabContentHeight };
             }
 
             if (objectTypeScrollArea != null)
             {
-                objectTypeScrollArea.Position = new Vector2(ContentStartPosition.X, tabContentY);
-                objectTypeScrollArea.Size = new Vector2(ContentSize.X, tabContentHeight);
+                objectTypeScrollArea.Position = ContentStartPosition with { Y = tabContentY };
+                objectTypeScrollArea.Size = ContentSize with { Y = tabContentHeight };
             }
 
             if (displayScrollArea != null)
             {
-                displayScrollArea.Position = new Vector2(ContentStartPosition.X, tabContentY);
-                displayScrollArea.Size = new Vector2(ContentSize.X, tabContentHeight);
+                displayScrollArea.Position = ContentStartPosition with { Y = tabContentY };
+                displayScrollArea.Size = ContentSize with { Y = tabContentHeight };
             }
 
             if (objectDetailScrollArea != null)
             {
-                objectDetailScrollArea.Position = new Vector2(ContentStartPosition.X, tabContentY);
-                objectDetailScrollArea.Size = new Vector2(ContentSize.X, tabContentHeight);
+                objectDetailScrollArea.Position = ContentStartPosition with { Y = tabContentY };
+                objectDetailScrollArea.Size = ContentSize with { Y = tabContentHeight };
             }
         }
         catch (Exception ex)
         {
-            DService.Log.Error($"调整窗口大小失败: {ex.Message}");
+            DService.Log?.Error($"调整窗口大小失败: {ex.Message}");
         }
     }
 
@@ -645,13 +658,14 @@ public unsafe class NativeConfigWindow(Configuration config) : NativeAddon
             var count = 0;
             var nodeIndex = 0;
 
+            if (DService.ObjectTable == null) return;
             foreach (var obj in DService.ObjectTable)
             {
                 if (obj == null || count >= maxObjects)
                     break;
 
                 var objectId = $"{obj.GameObjectID:X8}";
-                var name = obj.Name.ToString();
+                var name = obj.Name?.ToString() ?? string.Empty;
                 if (name.Length > 18)
                     name = name.Substring(0, 15) + "...";
 
@@ -691,11 +705,14 @@ public unsafe class NativeConfigWindow(Configuration config) : NativeAddon
                             FontType = FontType.Axis,
                             FontSize = 12,
                             String = text,
-                            TextColor = new Vector4(0.9f, 0.9f, 0.9f, 1.0f),
+                            TextColor = new Vector4(0.9f, 0.9f, 0.9f, 1.0f)
                         };
 
-                        AttachNode(cellText, objectDetailScrollArea.ContentAreaNode);
-                        objectListNodes.Add(cellText);
+                        if (objectDetailScrollArea?.ContentAreaNode != null)
+                        {
+                            AttachNode(cellText, objectDetailScrollArea.ContentAreaNode);
+                            objectListNodes.Add(cellText);
+                        }
                     }
                 }
 
@@ -704,7 +721,7 @@ public unsafe class NativeConfigWindow(Configuration config) : NativeAddon
                 nodeIndex++;
             }
 
-            for (int i = nodeIndex * 5; i < objectListNodes.Count; i++)
+            for (var i = nodeIndex * 5; i < objectListNodes.Count; i++)
             {
                 objectListNodes[i].IsVisible = false;
             }
@@ -716,7 +733,7 @@ public unsafe class NativeConfigWindow(Configuration config) : NativeAddon
         }
         catch (Exception ex)
         {
-            DService.Log.Error($"更新对象列表失败: {ex.Message}");
+            DService.Log?.Error($"更新对象列表失败: {ex.Message}");
         }
     }
 
