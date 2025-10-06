@@ -46,14 +46,14 @@ public class MainWindow : Window, IDisposable
 
         foreach (var obj in DService.ObjectTable)
         {
-            if (obj.EntityId == 0) continue;
+            if (obj.EntityID == 0) continue;
             if (Vector3.Distance(localPlayer.Position, obj.Position) > config.Range) continue;
             if (!ShouldShowObject(obj)) continue;
 
             if (!DService.Gui.WorldToScreen(obj.Position, out var screenPos)) continue;
             var objInfo = CreateGameObjectInfo(obj);
             CachedGameObjects.Add(objInfo);
-            OverlayPositions[obj.EntityId] = screenPos;
+            OverlayPositions[obj.EntityID] = screenPos;
             if (CachedGameObjects.Count >= config.MaxObjects) break;
         }
 
@@ -413,8 +413,8 @@ public class MainWindow : Window, IDisposable
 
         var objInfo = new GameObjectInfo
         {
-            EntityID = obj.EntityId,
-            DataID = obj.DataId,
+            EntityID = obj.EntityID,
+            DataID = obj.DataID,
             Name = obj.Name.TextValue,
             ObjectKind = obj.ObjectKind,
             Position = obj.Position,
@@ -428,7 +428,7 @@ public class MainWindow : Window, IDisposable
         objInfo.MaxHP = battleChara.MaxHp;
         objInfo.MaxMp = battleChara.MaxMp;
         objInfo.IsCasting = battleChara.IsCasting;
-        objInfo.CastActionID = battleChara.CastActionId;
+        objInfo.CastActionID = battleChara.CastActionID;
         objInfo.CurrentCastTime = battleChara.CurrentCastTime;
         objInfo.TotalCastTime = battleChara.TotalCastTime;
 
@@ -447,14 +447,14 @@ public class MainWindow : Window, IDisposable
             }
             catch (Exception ex)
             {
-                HelpersOm.Debug($"Failed to access cast rotation for object {obj.EntityId}: {ex.Message}");
+                HelpersOm.Debug($"Failed to access cast rotation for object {obj.EntityID}: {ex.Message}");
                 objInfo.CastRotation = null;
             }
 
-            var castTargetID = battleChara.CastTargetObjectId;
+            var castTargetID = battleChara.CastTargetObjectID;
             if (castTargetID != 0)
             {
-                var castTarget = DService.ObjectTable.SearchById(castTargetID);
+                var castTarget = DService.ObjectTable.SearchByID(castTargetID);
                 objInfo.CastTargetName = castTarget?.Name.TextValue ?? $"ID:{castTargetID}";
             }
             else
@@ -464,10 +464,10 @@ public class MainWindow : Window, IDisposable
         objInfo.StatusEffects.Clear();
         foreach (var status in battleChara.StatusList)
         {
-            if (status.StatusId == 0) continue;
+            if (status.StatusID == 0) continue;
             objInfo.StatusEffects.Add(new StatusInfo
             {
-                StatusID = status.StatusId,
+                StatusID = status.StatusID,
                 RemainingTime = status.RemainingTime,
                 Param = status.Param
             });
