@@ -1,7 +1,9 @@
 using System;
+using System.Numerics;
 using Dalamud.Plugin;
 using Dalamud.Interface.Windowing;
 using JiaTools.Windows;
+using KamiToolKit;
 
 namespace JiaTools;
 
@@ -12,7 +14,8 @@ public sealed class Plugin : IDalamudPlugin
     private readonly WindowSystem windowSystem;
     private readonly Configuration configuration;
     private readonly MainWindow mainWindow;
-    private readonly ConfigWindow configWindow;
+    private readonly NativeController nativeController;
+    private readonly NativeConfigWindow nativeConfigWindow;
 
     public Plugin(IDalamudPluginInterface pluginInterface)
     {
@@ -23,16 +26,27 @@ public sealed class Plugin : IDalamudPlugin
             configuration = pluginInterface.GetPluginConfig() as Configuration ?? new Configuration();
             configuration.Save();
 
+            // Initialize NativeController for Native UI support
+            nativeController = new NativeController(pluginInterface);
+
             windowSystem = new WindowSystem("JiaTools");
 
             mainWindow = new MainWindow(configuration);
-            configWindow = new ConfigWindow(configuration);
 
             windowSystem.AddWindow(mainWindow);
-            windowSystem.AddWindow(configWindow);
+
+            // Initialize Native Config Window
+            nativeConfigWindow = new NativeConfigWindow(configuration)
+            {
+                InternalName = "JiaToolsConfig",
+                Title = "JiaTools 配置",
+                Size = new Vector2(350.0f, 550.0f),
+                Position = new Vector2(100.0f, 100.0f),
+                NativeController = nativeController,
+            };
 
             DService.UiBuilder.Draw += windowSystem.Draw;
-            DService.UiBuilder.OpenConfigUi += () => configWindow.IsOpen = !configWindow.IsOpen;
+            DService.UiBuilder.OpenConfigUi += () => nativeConfigWindow.Toggle();
             DService.UiBuilder.OpenMainUi += () =>
             {
                 configuration.Enabled = !configuration.Enabled;
@@ -67,10 +81,10 @@ public sealed class Plugin : IDalamudPlugin
         var status = configuration.Enabled ? "已开启" : "已关闭";
         DService.Chat.Print($"[JiaTools] 悬浮窗{status}");
     }
-    
+
     private void OnConfigCommand(string command, string args)
     {
-        configWindow.IsOpen = !configWindow.IsOpen;
+        nativeConfigWindow.Toggle();
     }
 
     private void OnFrameworkUpdate(Dalamud.Plugin.Services.IFramework framework)
@@ -83,9 +97,13 @@ public sealed class Plugin : IDalamudPlugin
         DService.Command.RemoveHandler("/jtools");
         DService.Command.RemoveHandler("/jconfig");
         DService.Framework.Update -= OnFrameworkUpdate;
+
+        // Dispose Native UI components
+        nativeConfigWindow.Dispose();
+        nativeController.Dispose();
+
         windowSystem.RemoveAllWindows();
         mainWindow.Dispose();
-        configWindow.Dispose();
         DService.Uninit();
     }
 }
