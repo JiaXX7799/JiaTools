@@ -183,15 +183,7 @@ public class ObjectListWindow : Window, IDisposable
             ImGui.EndChild();
         }
     }
-
-    public override void PostDraw()
-    {
-        // PostDraw 不再负责绘制连线，连线由 DrawLineOverlay 独立处理
-    }
-
-    /// <summary>
-    /// 独立的连线绘制方法，不依赖窗口状态
-    /// </summary>
+    
     public void DrawLineOverlay()
     {
         if (enableLine)
