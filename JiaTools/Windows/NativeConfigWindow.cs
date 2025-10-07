@@ -9,7 +9,7 @@ using KamiToolKit.Nodes.TabBar;
 
 namespace JiaTools.Windows;
 
-public unsafe class NativeConfigWindow(Configuration config) : NativeAddon
+public unsafe class NativeConfigWindow(Configuration config, Action openObjectListWindow) : NativeAddon
 {
     private TabBarNode? tabBar;
 
@@ -45,7 +45,6 @@ public unsafe class NativeConfigWindow(Configuration config) : NativeAddon
     private CheckboxNode? showStatusListCheckbox;
 
     // 对象详情
-    private string objectFilterText = "";
     private List<TextNode> objectListNodes = [];
     private int updateCounter;
     private readonly Vector2 normalSize = new(350, 600);
@@ -512,7 +511,7 @@ public unsafe class NativeConfigWindow(Configuration config) : NativeAddon
         var headerText = new TextNode
         {
             Position = new Vector2(10, 10),
-            Size = new Vector2(500, 20),
+            Size = new Vector2(300, 20),
             IsVisible = true,
             FontType = FontType.Axis,
             FontSize = 16,
@@ -520,6 +519,16 @@ public unsafe class NativeConfigWindow(Configuration config) : NativeAddon
             TextColor = new Vector4(0.9f, 0.8f, 0.4f, 1.0f)
         };
         AttachNode(headerText, contentNode);
+
+        var openWindowButton = new TextButtonNode
+        {
+            Position = new Vector2(320, 10),
+            Size = new Vector2(150, 28),
+            IsVisible = true,
+            String = "打开详细列表",
+            OnClick = openObjectListWindow
+        };
+        AttachNode(openWindowButton, contentNode);
 
         var columnHeaders = new[]
         {
