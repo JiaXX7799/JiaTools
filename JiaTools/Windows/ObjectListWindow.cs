@@ -12,11 +12,11 @@ public class ObjectListWindow : Window, IDisposable
     private static readonly string[] ColumnNames = ["ObjectID", "名称", "类型", "DataID", "目标ID"];
 
     // draw lines variables
-    private readonly List<ulong> targetObjects1 = new();
-    private readonly List<ulong> targetObjects2 = new();
-    private bool enableLine = false;
-    private bool target1IsLocalPlayer = false;
-    private bool pairwiseMode = false; // pair mode
+    private readonly List<ulong> targetObjects1 = [];
+    private readonly List<ulong> targetObjects2 = [];
+    private bool enableLine;
+    private bool target1IsLocalPlayer;
+    private bool pairwiseMode; // pair mode
     private string newTarget1Input = "";
     private string newTarget2Input = "";
     private static readonly uint LineColor = ImGui.ColorConvertFloat4ToU32(new Vector4(0, 1, 0, 1));
@@ -66,9 +66,9 @@ public class ObjectListWindow : Window, IDisposable
             target1IsLocalPlayer = false;
             DService.Log?.Debug($"ObjectListWindow: Territory changed to {territoryId}, cleared line targets");
         }
-        catch
+        catch (Exception e)
         {
-            // ignore
+            Error(e.Message);
         }
     }
 
@@ -90,85 +90,85 @@ public class ObjectListWindow : Window, IDisposable
                 ImGuiTableFlags.Borders | ImGuiTableFlags.RowBg | ImGuiTableFlags.ScrollY | ImGuiTableFlags.Resizable,
                 new Vector2(0, 0)))
             {
-            // set cols
-            ImGui.TableSetupColumn(ColumnNames[0], ImGuiTableColumnFlags.WidthFixed, 100);
-            ImGui.TableSetupColumn(ColumnNames[1], ImGuiTableColumnFlags.WidthStretch);
-            ImGui.TableSetupColumn(ColumnNames[2], ImGuiTableColumnFlags.WidthFixed, 80);
-            ImGui.TableSetupColumn(ColumnNames[3], ImGuiTableColumnFlags.WidthFixed, 100);
-            ImGui.TableSetupColumn(ColumnNames[4], ImGuiTableColumnFlags.WidthFixed, 100);
-            ImGui.TableHeadersRow();
+                // set cols
+                ImGui.TableSetupColumn(ColumnNames[0], ImGuiTableColumnFlags.WidthFixed, 100);
+                ImGui.TableSetupColumn(ColumnNames[1], ImGuiTableColumnFlags.WidthStretch);
+                ImGui.TableSetupColumn(ColumnNames[2], ImGuiTableColumnFlags.WidthFixed, 80);
+                ImGui.TableSetupColumn(ColumnNames[3], ImGuiTableColumnFlags.WidthFixed, 100);
+                ImGui.TableSetupColumn(ColumnNames[4], ImGuiTableColumnFlags.WidthFixed, 100);
+                ImGui.TableHeadersRow();
 
-            // draw lsit
-            if (DService.ObjectTable != null)
-            {
-                try
+                // draw lsit
+                if (DService.ObjectTable != null)
                 {
-                    foreach (var obj in DService.ObjectTable)
+                    try
                     {
-                        if (obj == null || !obj.IsValid()) continue;
-
-                        string objectId, name, type, dataId, targetId;
-                        Dalamud.Game.ClientState.Objects.Enums.ObjectKind objectKind;
-
-                        try
+                        foreach (var obj in DService.ObjectTable)
                         {
-                            objectId = $"{obj.GameObjectID:X8}";
-                            name = obj.Name?.ToString() ?? "";
-                            objectKind = obj.ObjectKind;
-                            type = GetShortTypeName(objectKind);
-                            dataId = $"{obj.DataID}";
-                            targetId = $"{obj.TargetObjectID:X8}";
-                        }
-                        catch
-                        {
-                            continue;
-                        }
-                    
-                        if (!IsObjectKindVisible(objectKind))
-                            continue;
+                            if (obj == null || !obj.IsValid()) continue;
 
-                        // text filter
-                        if (!string.IsNullOrEmpty(filterText))
-                        {
-                            var filter = filterText.ToLower();
-                            if (!objectId.ToLower().Contains(filter) &&
-                                !name.ToLower().Contains(filter) &&
-                                !type.ToLower().Contains(filter) &&
-                                !dataId.ToLower().Contains(filter) &&
-                                !targetId.ToLower().Contains(filter))
+                            string objectId, name, type, dataId, targetId;
+                            Dalamud.Game.ClientState.Objects.Enums.ObjectKind objectKind;
+
+                            try
+                            {
+                                objectId = $"{obj.GameObjectID:X8}";
+                                name = obj.Name?.ToString() ?? "";
+                                objectKind = obj.ObjectKind;
+                                type = GetShortTypeName(objectKind);
+                                dataId = $"{obj.DataID}";
+                                targetId = $"{obj.TargetObjectID:X8}";
+                            }
+                            catch
                             {
                                 continue;
                             }
+                    
+                            if (!IsObjectKindVisible(objectKind))
+                                continue;
+
+                            // text filter
+                            if (!string.IsNullOrEmpty(filterText))
+                            {
+                                var filter = filterText.ToLower();
+                                if (!objectId.ToLower().Contains(filter) &&
+                                    !name.ToLower().Contains(filter) &&
+                                    !type.ToLower().Contains(filter) &&
+                                    !dataId.ToLower().Contains(filter) &&
+                                    !targetId.ToLower().Contains(filter))
+                                {
+                                    continue;
+                                }
+                            }
+
+                            ImGui.TableNextRow();
+
+                            ImGui.TableSetColumnIndex(0);
+                            ImGui.TextUnformatted(objectId);
+                            DrawCopyTooltip(objectId);
+
+                            ImGui.TableSetColumnIndex(1);
+                            ImGui.TextUnformatted(name);
+                            DrawCopyTooltip(name);
+
+                            ImGui.TableSetColumnIndex(2);
+                            ImGui.TextUnformatted(type);
+                            DrawCopyTooltip(type);
+
+                            ImGui.TableSetColumnIndex(3);
+                            ImGui.TextUnformatted(dataId);
+                            DrawCopyTooltip(dataId);
+
+                            ImGui.TableSetColumnIndex(4);
+                            ImGui.TextUnformatted(targetId);
+                            DrawCopyTooltip(targetId);
                         }
-
-                        ImGui.TableNextRow();
-
-                        ImGui.TableSetColumnIndex(0);
-                        ImGui.TextUnformatted(objectId);
-                        DrawCopyTooltip(objectId);
-
-                        ImGui.TableSetColumnIndex(1);
-                        ImGui.TextUnformatted(name);
-                        DrawCopyTooltip(name);
-
-                        ImGui.TableSetColumnIndex(2);
-                        ImGui.TextUnformatted(type);
-                        DrawCopyTooltip(type);
-
-                        ImGui.TableSetColumnIndex(3);
-                        ImGui.TextUnformatted(dataId);
-                        DrawCopyTooltip(dataId);
-
-                        ImGui.TableSetColumnIndex(4);
-                        ImGui.TextUnformatted(targetId);
-                        DrawCopyTooltip(targetId);
+                    }
+                    catch (Exception ex)
+                    {
+                        DService.Log?.Error($"Error drawing object list: {ex.Message}");
                     }
                 }
-                catch (Exception ex)
-                {
-                    DService.Log?.Error($"Error drawing object list: {ex.Message}");
-                }
-            }
 
                 ImGui.EndTable();
             }
@@ -366,7 +366,7 @@ public class ObjectListWindow : Window, IDisposable
         // Target 2 List
         if (ImGui.BeginChild("##Target2List", new Vector2(-1, 150), true))
         {
-            for (int i = targetObjects2.Count - 1; i >= 0; i--)
+            for (var i = targetObjects2.Count - 1; i >= 0; i--)
             {
                 var targetId = targetObjects2[i];
                 ImGui.Text($"{targetId:X8}");
@@ -430,8 +430,8 @@ public class ObjectListWindow : Window, IDisposable
             if (pairwiseMode)
             {
                 // p2p
-                int pairCount = Math.Min(sources.Count, targetObjects2.Count);
-                for (int i = 0; i < pairCount; i++)
+                var pairCount = Math.Min(sources.Count, targetObjects2.Count);
+                for (var i = 0; i < pairCount; i++)
                 {
                     try
                     {
@@ -454,9 +454,9 @@ public class ObjectListWindow : Window, IDisposable
                         drawList.AddCircleFilled(pos1, 7f, DotColor);
                         drawList.AddCircleFilled(pos2, 7f, DotColor);
                     }
-                    catch
+                    catch (Exception e)
                     {
-                        continue;
+                        Error(e.Message);
                     }
                 }
             }
@@ -489,17 +489,17 @@ public class ObjectListWindow : Window, IDisposable
                                     drawList.AddCircleFilled(pos2, 7f, DotColor);
                                 }
                             }
-                            catch
+                            catch (Exception e)
                             {
-                                continue;
+                                Error(e.Message);
                             }
                         }
                         
                         drawList.AddCircleFilled(pos1, 7f, DotColor);
                     }
-                    catch
+                    catch (Exception e)
                     {
-                        continue;
+                        Error(e.Message);
                     }
                 }
             }
@@ -542,13 +542,13 @@ public class ObjectListWindow : Window, IDisposable
             if (ImGui.IsItemClicked())
             {
                 ImGui.SetClipboardText(text);
-                HelpersOm.NotificationInfo($"已复制: {text}");
-                HelpersOm.Debug($"已复制: {text}");
+                NotificationInfo($"已复制: {text}");
+                Debug($"已复制: {text}");
             }
         }
-        catch
+        catch (Exception e)
         {
-            // ignore
+            Error(e.Message);
         }
     }
 
