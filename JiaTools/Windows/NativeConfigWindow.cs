@@ -48,10 +48,14 @@ public unsafe class NativeConfigWindow(Configuration config, Action openObjectLi
     private List<TextNode> objectListNodes = [];
     private int updateCounter;
     private readonly Vector2 normalSize = new(350, 600);
-    private readonly Vector2 expandedSize = new(800, 800);
+    private readonly Vector2 expandedSize = new(600, 800);
 
     protected override void OnSetup(AtkUnitBase* addon)
     {
+        // 清空旧的对象列表节点引用，防止空引用
+        objectListNodes.Clear();
+        updateCounter = 0;
+
         AttachNode(tabBar = new TabBarNode
         {
             Position = ContentStartPosition,
@@ -157,6 +161,9 @@ public unsafe class NativeConfigWindow(Configuration config, Action openObjectLi
             maxObjectsSlider.Width = 300.0f;
         if (mergeDistanceSlider != null)
             mergeDistanceSlider.Width = 300.0f;
+
+        // 初始化窗口状态：设置为normalSize
+        ResizeWindow(normalSize);
     }
 
     private void SetupGeneralSettings(VerticalListNode category)
@@ -610,40 +617,53 @@ public unsafe class NativeConfigWindow(Configuration config, Action openObjectLi
                 DService.Log?.Error("WindowNode is null in ResizeWindow");
                 return;
             }
+
+            // 设置窗口大小
             WindowNode.Size = newSize;
             Size = newSize;
 
+            // 强制更新布局，确保ContentSize和ContentStartPosition正确计算
+            var contentStart = ContentStartPosition;
+            var contentSize = ContentSize;
+
+            // 更新TabBar大小和位置
             if (tabBar != null)
             {
-                tabBar.Position = ContentStartPosition;
-                tabBar.Size = ContentSize with { Y = 32 };
+                tabBar.Position = contentStart;
+                tabBar.Size = contentSize with { Y = 32 };
+
+                // 使用反射来强制更新tab按钮布局
+                var method = tabBar.GetType().GetMethod("RecalculateLayout",
+                    System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+                method?.Invoke(tabBar, null);
             }
 
-            var tabContentY = ContentStartPosition.Y + 40;
-            var tabContentHeight = ContentSize.Y - 40;
+            // 计算内容区域的位置和大小
+            var tabContentY = contentStart.Y + 40;
+            var tabContentHeight = contentSize.Y - 40;
 
             if (generalScrollArea != null)
             {
-                generalScrollArea.Position = ContentStartPosition with { Y = tabContentY };
-                generalScrollArea.Size = ContentSize with { Y = tabContentHeight };
+                generalScrollArea.Position = contentStart with { Y = tabContentY };
+                generalScrollArea.Size = contentSize with { Y = tabContentHeight };
             }
 
             if (objectTypeScrollArea != null)
             {
-                objectTypeScrollArea.Position = ContentStartPosition with { Y = tabContentY };
-                objectTypeScrollArea.Size = ContentSize with { Y = tabContentHeight };
+                objectTypeScrollArea.Position = contentStart with { Y = tabContentY };
+                objectTypeScrollArea.Size = contentSize with { Y = tabContentHeight };
             }
 
             if (displayScrollArea != null)
             {
-                displayScrollArea.Position = ContentStartPosition with { Y = tabContentY };
-                displayScrollArea.Size = ContentSize with { Y = tabContentHeight };
+                displayScrollArea.Position = contentStart with { Y = tabContentY };
+                displayScrollArea.Size = contentSize with { Y = tabContentHeight };
             }
 
             if (objectDetailScrollArea != null)
             {
-                objectDetailScrollArea.Position = ContentStartPosition with { Y = tabContentY };
-                objectDetailScrollArea.Size = ContentSize with { Y = tabContentHeight };
+                objectDetailScrollArea.Position = contentStart with { Y = tabContentY };
+                objectDetailScrollArea.Size = contentSize with { Y = tabContentHeight };
             }
         }
         catch (Exception ex)
@@ -701,8 +721,18 @@ public unsafe class NativeConfigWindow(Configuration config, Action openObjectLi
 
                     if (nodeIdx < objectListNodes.Count)
                     {
-                        objectListNodes[nodeIdx].String = text;
-                        objectListNodes[nodeIdx].IsVisible = true;
+                        var node = objectListNodes[nodeIdx];
+                        if (node != null)
+                        {
+                            node.String = text;
+                            node.IsVisible = true;
+                        }
+                        else
+                        {
+                            // 节点无效，清空列表并重新创建
+                            objectListNodes.Clear();
+                            return;
+                        }
                     }
                     else
                     {
@@ -732,7 +762,10 @@ public unsafe class NativeConfigWindow(Configuration config, Action openObjectLi
 
             for (var i = nodeIndex * 5; i < objectListNodes.Count; i++)
             {
-                objectListNodes[i].IsVisible = false;
+                if (objectListNodes[i] != null)
+                {
+                    objectListNodes[i].IsVisible = false;
+                }
             }
 
             if (objectDetailScrollArea != null)
