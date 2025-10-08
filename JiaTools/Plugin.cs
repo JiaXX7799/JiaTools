@@ -131,24 +131,24 @@ public sealed class Plugin : IDalamudPlugin
 
                 if (localPlayer == null)
                 {
-                    HelpersOm.NotificationError("当前没有可用的角色");
+                    NotificationError("当前没有可用的角色");
                     return;
                 }
 
                 if (target == null)
                 {
-                    HelpersOm.NotificationWarning("当前没有选中目标");
+                    NotificationWarning("当前没有选中目标");
                     return;
                 }
 
                 if (target.GameObjectID == localPlayer.EntityId)
                 {
-                    HelpersOm.NotificationWarning("目标不能是自己");
+                    NotificationWarning("目标不能是自己");
                     return;
                 }
 
                 objectListWindow.SetDrawLine(true, target.GameObjectID);
-                HelpersOm.NotificationSuccess($"已设置连线：自己 → {target.Name}");
+                NotificationSuccess($"已设置连线：自己 → {target.Name}");
                 return;
             }
 
@@ -158,12 +158,10 @@ public sealed class Plugin : IDalamudPlugin
                 if (ulong.TryParse(parts[0], System.Globalization.NumberStyles.HexNumber, null, out var entityId2))
                 {
                     objectListWindow.SetDrawLine(true, entityId2);
-                    HelpersOm.NotificationSuccess($"已设置连线：自己 → {entityId2:X8}");
+                    NotificationSuccess($"已设置连线：自己 → {entityId2:X8}");
                 }
                 else
-                {
-                    HelpersOm.NotificationError($"无效的 EntityID: {parts[0]}");
-                }
+                    NotificationError($"无效的 EntityID: {parts[0]}");
             }
             else if (parts.Length >= 2)
             {
@@ -172,18 +170,16 @@ public sealed class Plugin : IDalamudPlugin
                     ulong.TryParse(parts[1], System.Globalization.NumberStyles.HexNumber, null, out var entityId2))
                 {
                     objectListWindow.SetDrawLine(entityId1, entityId2);
-                    HelpersOm.NotificationSuccess($"已设置连线：{entityId1:X8} → {entityId2:X8}");
+                    NotificationSuccess($"已设置连线：{entityId1:X8} → {entityId2:X8}");
                 }
                 else
-                {
-                    HelpersOm.NotificationError("无效的 EntityID");
-                }
+                    NotificationError("无效的 EntityID");
             }
         }
         catch (Exception ex)
         {
             DService.Log?.Error(ex, "Failed to execute /jdraw command");
-            HelpersOm.NotificationError($"命令执行失败: {ex.Message}");
+            NotificationError($"命令执行失败: {ex.Message}");
         }
     }
 
@@ -197,7 +193,7 @@ public sealed class Plugin : IDalamudPlugin
         catch (Exception ex)
         {
             DService.Log?.Error(ex, "Failed to execute /jclear command");
-            HelpersOm.NotificationError($"命令执行失败: {ex.Message}");
+            NotificationError($"命令执行失败: {ex.Message}");
         }
     }
 

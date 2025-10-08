@@ -22,7 +22,7 @@ public class Configuration : IPluginConfiguration
 
     public bool ShowEntityID { get; set; } = true;
     public bool ShowDataID { get; set; } = true;
-    public bool UseHexID { get; set; } = false;
+    public bool UseHexID { get; set; }
     public bool ShowPosition { get; set; } = true;
     public bool ShowRotation { get; set; }
     public bool ShowDistance { get; set; } = true;

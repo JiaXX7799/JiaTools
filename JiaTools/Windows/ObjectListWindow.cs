@@ -84,7 +84,7 @@ public class ObjectListWindow : Window, IDisposable
         var linePanelWidth = 250f;
         var tableWidth = availWidth - linePanelWidth - ImGui.GetStyle().ItemSpacing.X;
 
-        if (ImGui.BeginChild("##TablePanel", new Vector2(tableWidth, availHeight), false))
+        if (ImGui.BeginChild("##TablePanel", new Vector2(tableWidth, availHeight)))
         {
             if (ImGui.BeginTable("##ObjectListTable", ColumnNames.Length,
                 ImGuiTableFlags.Borders | ImGuiTableFlags.RowBg | ImGuiTableFlags.ScrollY | ImGuiTableFlags.Resizable,
@@ -321,7 +321,7 @@ public class ObjectListWindow : Window, IDisposable
             // Target 1 List
             if (ImGui.BeginChild("##Target1List", new Vector2(-1, 100), true))
             {
-                for (int i = targetObjects1.Count - 1; i >= 0; i--)
+                for (var i = targetObjects1.Count - 1; i >= 0; i--)
                 {
                     var targetId = targetObjects1[i];
                     ImGui.Text($"{targetId:X8}");
