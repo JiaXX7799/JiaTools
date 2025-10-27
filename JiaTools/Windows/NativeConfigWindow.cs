@@ -41,6 +41,7 @@ public unsafe class NativeConfigWindow(Configuration config, Action openObjectLi
     private CheckboxNode? showDistanceCheckbox;
     private CheckboxNode? showHealthCheckbox;
     private CheckboxNode? showManaCheckbox;
+    private CheckboxNode? showMarkerCheckbox;
     private CheckboxNode? showCastInfoCheckbox;
     private CheckboxNode? showStatusListCheckbox;
 
@@ -481,6 +482,19 @@ public unsafe class NativeConfigWindow(Configuration config, Action openObjectLi
             OnClick = isChecked =>
             {
                 config.ShowMana = isChecked;
+                config.Save();
+            }
+        });
+
+        category.AddNode(showMarkerCheckbox = new CheckboxNode
+        {
+            Size = new Vector2(300, 20),
+            IsVisible = true,
+            String = "标记",
+            IsChecked = config.ShowMarker,
+            OnClick = isChecked =>
+            {
+                config.ShowMarker = isChecked;
                 config.Save();
             }
         });

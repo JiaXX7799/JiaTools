@@ -230,6 +230,12 @@ public class MainWindow : Window, IDisposable
         lines.Add((objInfo.Name, Yellow, objInfo.Name));
         lines.Add(($"类型: {objInfo.ObjectKind}", White, objInfo.ObjectKind.ToString()));
 
+        if (config.ShowMarker && objInfo.Marker != MarkType.None)
+        {
+            var markerName = MarkerHelper.GetMarkerName(objInfo.Marker);
+            lines.Add(($"标记: {markerName}", White, markerName));
+        }
+
         if (config.ShowEntityID)
         {
             var entityIDText = config.UseHexID ? $"EntityID: 0x{objInfo.EntityID:X8}" : $"EntityID: {objInfo.EntityID}";
@@ -426,7 +432,8 @@ public class MainWindow : Window, IDisposable
                 ObjectKind = obj.ObjectKind,
                 Position = obj.Position,
                 Rotation = obj.Rotation,
-                Distance = distance
+                Distance = distance,
+                Marker = MarkerHelper.GetObjectMarker(obj)
             };
 
             if (obj is not IBattleChara battleChara) return objInfo;
@@ -510,6 +517,7 @@ public class MainWindow : Window, IDisposable
         public string CastTargetName { get; set; } = string.Empty;
         public List<StatusInfo> StatusEffects { get; } = [];
         public float? CastRotation { get; set; }
+        public MarkType Marker { get; set; }
     }
 
     private class StatusInfo

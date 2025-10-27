@@ -9,7 +9,7 @@ namespace JiaTools.Windows;
 public class ObjectListWindow : Window, IDisposable
 {
     private string filterText = "";
-    private static readonly string[] ColumnNames = ["ObjectID", "名称", "类型", "DataID", "目标ID"];
+    private static readonly string[] ColumnNames = ["ObjectID", "名称", "类型", "标记", "DataID", "目标ID"];
 
     // draw lines variables
     private readonly List<ulong> targetObjects1 = [];
@@ -91,11 +91,12 @@ public class ObjectListWindow : Window, IDisposable
                 new Vector2(0, 0)))
             {
                 // set cols
-                ImGui.TableSetupColumn(ColumnNames[0], ImGuiTableColumnFlags.WidthFixed, 100);
-                ImGui.TableSetupColumn(ColumnNames[1], ImGuiTableColumnFlags.WidthStretch);
-                ImGui.TableSetupColumn(ColumnNames[2], ImGuiTableColumnFlags.WidthFixed, 80);
-                ImGui.TableSetupColumn(ColumnNames[3], ImGuiTableColumnFlags.WidthFixed, 100);
-                ImGui.TableSetupColumn(ColumnNames[4], ImGuiTableColumnFlags.WidthFixed, 100);
+                ImGui.TableSetupColumn(ColumnNames[0], ImGuiTableColumnFlags.WidthFixed, 100);  // ObjectID
+                ImGui.TableSetupColumn(ColumnNames[1], ImGuiTableColumnFlags.WidthStretch);     // 名称
+                ImGui.TableSetupColumn(ColumnNames[2], ImGuiTableColumnFlags.WidthFixed, 80);   // 类型
+                ImGui.TableSetupColumn(ColumnNames[3], ImGuiTableColumnFlags.WidthFixed, 80);   // 标记
+                ImGui.TableSetupColumn(ColumnNames[4], ImGuiTableColumnFlags.WidthFixed, 100);  // DataID
+                ImGui.TableSetupColumn(ColumnNames[5], ImGuiTableColumnFlags.WidthFixed, 100);  // 目标ID
                 ImGui.TableHeadersRow();
 
                 // draw lsit
@@ -107,7 +108,7 @@ public class ObjectListWindow : Window, IDisposable
                         {
                             if (obj == null || !obj.IsValid()) continue;
 
-                            string objectId, name, type, dataId, targetId;
+                            string objectId, name, type, marker, dataId, targetId;
                             Dalamud.Game.ClientState.Objects.Enums.ObjectKind objectKind;
 
                             try
@@ -116,6 +117,8 @@ public class ObjectListWindow : Window, IDisposable
                                 name = obj.Name?.ToString() ?? "";
                                 objectKind = obj.ObjectKind;
                                 type = GetShortTypeName(objectKind);
+                                var markType = MarkerHelper.GetObjectMarker(obj);
+                                marker = markType != MarkType.None ? MarkerHelper.GetMarkerName(markType) : "";
                                 dataId = $"{obj.DataID}";
                                 targetId = $"{obj.TargetObjectID:X8}";
                             }
@@ -134,6 +137,7 @@ public class ObjectListWindow : Window, IDisposable
                                 if (!objectId.ToLower().Contains(filter) &&
                                     !name.ToLower().Contains(filter) &&
                                     !type.ToLower().Contains(filter) &&
+                                    !marker.ToLower().Contains(filter) &&
                                     !dataId.ToLower().Contains(filter) &&
                                     !targetId.ToLower().Contains(filter))
                                 {
@@ -156,10 +160,14 @@ public class ObjectListWindow : Window, IDisposable
                             DrawCopyTooltip(type);
 
                             ImGui.TableSetColumnIndex(3);
+                            ImGui.TextUnformatted(marker);
+                            DrawCopyTooltip(marker);
+
+                            ImGui.TableSetColumnIndex(4);
                             ImGui.TextUnformatted(dataId);
                             DrawCopyTooltip(dataId);
 
-                            ImGui.TableSetColumnIndex(4);
+                            ImGui.TableSetColumnIndex(5);
                             ImGui.TextUnformatted(targetId);
                             DrawCopyTooltip(targetId);
                         }
