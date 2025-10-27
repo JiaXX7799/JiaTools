@@ -1,7 +1,7 @@
 using Dalamud.Game.ClientState.Objects.Enums;
 using FFXIVClientStructs.FFXIV.Client.Game.UI;
 
-namespace JiaTools.Windows;
+namespace JiaTools.Helpers;
 
 public enum MarkType
 {
