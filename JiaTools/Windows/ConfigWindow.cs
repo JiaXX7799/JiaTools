@@ -208,6 +208,7 @@ public class ConfigWindow : Window, IDisposable
         config.ShowDistance = DrawStyledCheckbox("距离", config.ShowDistance, "与你的距离（米）", new Vector4(1.0f, 0.8f, 0.6f, 1.0f));
         config.ShowHealth = DrawStyledCheckbox("生命值", config.ShowHealth, "当前/最大生命值", new Vector4(1.0f, 0.6f, 0.6f, 1.0f));
         config.ShowMana = DrawStyledCheckbox("魔法值", config.ShowMana, "当前/最大魔法值", new Vector4(0.3f, 0.7f, 1.0f, 1.0f));
+        config.ShowMarker = DrawStyledCheckbox("标记", config.ShowMarker, "对象身上的目标标记信息", new Vector4(1.0f, 0.5f, 0.8f, 1.0f));
         config.ShowCastInfo = DrawStyledCheckbox("咏唱信息", config.ShowCastInfo, "当前咏唱的技能详细信息", new Vector4(1.0f, 0.6f, 0.9f, 1.0f));
         config.ShowStatusList = DrawStyledCheckbox("状态列表", config.ShowStatusList, "Buff和Debuff\n(最多显示5个)", new Vector4(0.9f, 0.6f, 1.0f, 1.0f));
 

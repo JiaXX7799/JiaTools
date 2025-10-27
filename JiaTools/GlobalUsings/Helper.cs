@@ -2,3 +2,4 @@
 global using static OmenTools.Helpers.ThrottlerHelper;
 global using static OmenTools.Helpers.ContentsFinderHelper;
 global using OmenTools.Helpers;
+global using JiaTools.Helpers;

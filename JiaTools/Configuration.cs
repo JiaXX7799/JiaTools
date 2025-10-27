@@ -30,6 +30,7 @@ public class Configuration : IPluginConfiguration
     public bool ShowStatusList { get; set; } = true;
     public bool ShowHealth { get; set; } = true;
     public bool ShowMana { get; set; } = true;
+    public bool ShowMarker { get; set; } = true;
 
     public void Save()
     {
