@@ -2,8 +2,8 @@ using System;
 using System.Numerics;
 using Dalamud.Plugin;
 using Dalamud.Interface.Windowing;
+using Dalamud.Plugin.Services;
 using JiaTools.Windows;
-using KamiToolKit;
 
 namespace JiaTools;
 
@@ -15,8 +15,7 @@ public sealed class Plugin : IDalamudPlugin
     private readonly Configuration configuration;
     private readonly MainWindow mainWindow;
     private readonly ObjectListWindow objectListWindow;
-    private readonly NativeController nativeController;
-    private readonly NativeConfigWindow nativeConfigWindow;
+    private readonly ConfigWindow configWindow;
 
     public Plugin(IDalamudPluginInterface pluginInterface)
     {
@@ -27,33 +26,19 @@ public sealed class Plugin : IDalamudPlugin
             configuration = pluginInterface.GetPluginConfig() as Configuration ?? new Configuration();
             configuration.Save();
 
-            // Initialize NativeController for Native UI support
-            nativeController = new NativeController(pluginInterface);
-
             windowSystem = new WindowSystem("JiaTools");
 
             mainWindow = new MainWindow(configuration);
             objectListWindow = new ObjectListWindow();
+            configWindow = new ConfigWindow(configuration);
 
             windowSystem.AddWindow(mainWindow);
             windowSystem.AddWindow(objectListWindow);
-
-            // Initialize Native Config Window
-            nativeConfigWindow = new NativeConfigWindow(configuration, () =>
-            {
-                DService.Framework?.RunOnTick(() => objectListWindow.Toggle());
-            })
-            {
-                InternalName = "JiaToolsConfig",
-                Title = "JiaTools 配置",
-                Size = new Vector2(350.0f, 550.0f),
-                Position = new Vector2(100.0f, 100.0f),
-                NativeController = nativeController,
-            };
+            windowSystem.AddWindow(configWindow);
 
             DService.UIBuilder.Draw += windowSystem.Draw;
             DService.UIBuilder.Draw += objectListWindow.DrawLineOverlay;
-            DService.UIBuilder.OpenConfigUi += () => nativeConfigWindow.Toggle();
+            DService.UIBuilder.OpenConfigUi += () => configWindow.Toggle();
             DService.UIBuilder.OpenMainUi += () =>
             {
                 configuration.Enabled = !configuration.Enabled;
@@ -109,7 +94,7 @@ public sealed class Plugin : IDalamudPlugin
 
     private void OnConfigCommand(string command, string args)
     {
-        nativeConfigWindow.Toggle();
+        configWindow.Toggle();
     }
     
     private void OnListCommand(string command, string args)
@@ -126,7 +111,7 @@ public sealed class Plugin : IDalamudPlugin
             if (parts.Length == 0)
             {
                 // no para
-                var localPlayer = DService.ClientState?.LocalPlayer;
+                var localPlayer = DService.ObjectTable.LocalPlayer;
                 var target = DService.Targets?.Target;
 
                 if (localPlayer == null)
@@ -141,7 +126,7 @@ public sealed class Plugin : IDalamudPlugin
                     return;
                 }
 
-                if (target.GameObjectID == localPlayer.EntityId)
+                if (target.GameObjectID == localPlayer.EntityID)
                 {
                     NotificationWarning("目标不能是自己");
                     return;
@@ -219,13 +204,10 @@ public sealed class Plugin : IDalamudPlugin
         if (DService.UIBuilder != null)
             DService.UIBuilder.Draw -= objectListWindow.DrawLineOverlay;
 
-        // Dispose Native UI components
-        nativeConfigWindow.Dispose();
-        nativeController.Dispose();
-
         windowSystem.RemoveAllWindows();
         mainWindow.Dispose();
         objectListWindow.Dispose();
+        configWindow.Dispose();
         DService.Uninit();
     }
 }

@@ -411,7 +411,7 @@ public class ObjectListWindow : Window, IDisposable
                 return;
             
             // check loading
-            if (DService.ClientState.LocalPlayer == null)
+            if (DService.ObjectTable.LocalPlayer == null)
                 return;
             
             if (DService.ClientState.TerritoryType == 0)
@@ -424,9 +424,9 @@ public class ObjectListWindow : Window, IDisposable
             // check Target1 list
             if (target1IsLocalPlayer)
             {
-                var localPlayer = DService.ClientState.LocalPlayer;
+                var localPlayer = DService.ObjectTable.LocalPlayer;
                 if (localPlayer != null && localPlayer.IsValid())
-                    sources.Add(localPlayer.EntityId);
+                    sources.Add(localPlayer.EntityID);
             }
             else
             {
