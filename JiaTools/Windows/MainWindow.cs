@@ -298,14 +298,28 @@ public class MainWindow : Window, IDisposable
             lines.Add(("正在咏唱", Orange, ""));
 
             var actionName = "";
+            float actionX = 0, actionY = 0;
+            uint actionType = 0;
+            string actionTypeString = string.Empty;
             if (LuminaGetter.TryGetRow<Lumina.Excel.Sheets.Action>(objInfo.CastActionID, out var actionRow))
+            {
                 actionName = actionRow.Name.ExtractText();
+                actionX = actionRow.XAxisModifier;
+                actionY = actionRow.EffectRange;
+                actionType = actionRow.CastType;
+                if (actionType < 6 && actionType > 2)
+                    actionY += objInfo.HitboxRadius;
+                actionTypeString = ActionHelper.GetTypeString(actionType);
+            }
 
             var actionText = !string.IsNullOrEmpty(actionName)
                 ? $"咏唱技能: {objInfo.CastActionID} ({actionName})"
                 : $"咏唱技能: {objInfo.CastActionID}";
 
             lines.Add((actionText, Orange, objInfo.CastActionID.ToString()));
+
+            lines.Add(($"范围：{actionY:F2}，宽度：{actionX:F2}", Orange, $"范围：{actionY:F2}，宽度：{actionX:F2}"));
+            lines.Add(($"形状：{actionTypeString}", Orange, $"形状：{actionTypeString}"));
 
             if (objInfo.CastRotation.HasValue)
             {
@@ -433,7 +447,8 @@ public class MainWindow : Window, IDisposable
                 Position = obj.Position,
                 Rotation = obj.Rotation,
                 Distance = distance,
-                Marker = MarkerHelper.GetObjectMarker(obj)
+                Marker = MarkerHelper.GetObjectMarker(obj),
+                HitboxRadius = obj.HitboxRadius,
             };
 
             if (obj is not IBattleChara battleChara) return objInfo;
@@ -518,6 +533,7 @@ public class MainWindow : Window, IDisposable
         public List<StatusInfo> StatusEffects { get; } = [];
         public float? CastRotation { get; set; }
         public MarkType Marker { get; set; }
+        public float HitboxRadius { get; set; }
     }
 
     private class StatusInfo
