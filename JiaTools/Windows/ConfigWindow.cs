@@ -92,7 +92,7 @@ public class ConfigWindow : Window, IDisposable
         ImGui.SetNextItemWidth(250);
         ImGui.PushStyleColor(ImGuiCol.SliderGrab, new Vector4(0.4f, 0.7f, 1.0f, 1.0f));
         ImGui.PushStyleColor(ImGuiCol.SliderGrabActive, new Vector4(0.3f, 0.6f, 0.9f, 1.0f));
-        if (ImGui.SliderInt("透明度", ref opacity, 10, 100, "%d%%"))
+        if (ImGui.SliderInt("不透明度", ref opacity, 10, 100, "%d%%"))
         {
             config.Opacity = opacity / 100f;
             config.Save();
