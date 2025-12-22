@@ -5,9 +5,9 @@
   "Description": "在游戏中显示对象的详细信息，包括玩家、NPC、事件对象等的 EntityID、DataID、位置、旋转、距离、生命值、咏唱信息、状态效果等。",
   "InternalName": "JiaTools",
   "ApplicableVersion": "any",
-  "EffectiveVersion": "1.0.0.6",
+  "EffectiveVersion": "1.0.0.7",
   "EffectiveApiLevel": 14,
-  "AssemblyVersion": "1.0.0.6",
+  "AssemblyVersion": "1.0.0.7",
   "Tags": [
     "utility",
     "overlay",

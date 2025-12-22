@@ -51,6 +51,7 @@ public class MainWindow : Window, IDisposable
             if (localPlayer?.Position == null || obj?.Position == null) continue;
             if (Vector3.Distance(localPlayer.Position, obj.Position) > config.Range) continue;
             if (!ShouldShowObject(obj)) continue;
+            if (!PassDataIDFilter(obj)) continue;
 
             if (DService.Gui == null || !DService.Gui.WorldToScreen(obj.Position, out var screenPos)) continue;
             var objInfo = CreateGameObjectInfo(obj);
@@ -427,6 +428,31 @@ public class MainWindow : Window, IDisposable
             ObjectKind.EventObj => config.ShowEventObjs,
             _ => false
         };
+    }
+
+    private bool PassDataIDFilter(IGameObject obj)
+    {
+        if (!config.EnableDataIDFilter) return true;
+        if (string.IsNullOrWhiteSpace(config.FilterDataIDs)) return true;
+
+        try
+        {
+            var filterIDs = config.FilterDataIDs
+                .Split(',', StringSplitOptions.RemoveEmptyEntries)
+                .Select(id => id.Trim())
+                .Where(id => !string.IsNullOrWhiteSpace(id))
+                .Select(id => uint.TryParse(id, out var result) ? result : (uint?)null)
+                .Where(id => id.HasValue)
+                .Select(id => id!.Value)
+                .ToHashSet();
+
+            return filterIDs.Count == 0 || filterIDs.Contains(obj.DataID);
+        }
+        catch (Exception ex)
+        {
+            Error($"Error in PassDataIDFilter: {ex.Message}", ex);
+            return true;
+        }
     }
 
     private static GameObjectInfo? CreateGameObjectInfo(IGameObject obj)

@@ -30,7 +30,7 @@ public sealed class Plugin : IDalamudPlugin
 
             mainWindow = new MainWindow(configuration);
             objectListWindow = new ObjectListWindow();
-            configWindow = new ConfigWindow(configuration);
+            configWindow = new ConfigWindow(configuration, objectListWindow);
 
             windowSystem.AddWindow(mainWindow);
             windowSystem.AddWindow(objectListWindow);

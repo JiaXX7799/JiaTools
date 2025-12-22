@@ -31,6 +31,8 @@ public class Configuration : IPluginConfiguration
     public bool ShowHealth { get; set; } = true;
     public bool ShowMana { get; set; } = true;
     public bool ShowMarker { get; set; } = true;
+    public bool EnableDataIDFilter { get; set; }
+    public string FilterDataIDs { get; set; } = "";
 
     public void Save()
     {

@@ -7,12 +7,14 @@ namespace JiaTools.Windows;
 public class ConfigWindow : Window, IDisposable
 {
     private readonly Configuration config;
+    private readonly ObjectListWindow objectListWindow;
 
-    public ConfigWindow(Configuration config) : base(
+    public ConfigWindow(Configuration config, ObjectListWindow objectListWindow) : base(
         "JiaTools 配置###JiaToolsConfig",
         ImGuiWindowFlags.NoScrollbar | ImGuiWindowFlags.NoScrollWithMouse)
     {
         this.config = config;
+        this.objectListWindow = objectListWindow;
         Size = new Vector2(650, 620);
         SizeCondition = ImGuiCond.FirstUseEver;
         SizeConstraints = new WindowSizeConstraints
@@ -80,6 +82,15 @@ public class ConfigWindow : Window, IDisposable
             ImGui.SameLine();
             ImGui.TextDisabled("(所有设置立即生效)");
         }
+
+        ImGui.SameLine();
+        var buttonPosX = ImGui.GetWindowWidth() - 120;
+        ImGui.SetCursorPosX(buttonPosX);
+        if (ImGui.Button("对象列表", new Vector2(100, 0)))
+        {
+            objectListWindow.Toggle();
+        }
+        DrawTooltip("打开对象列表窗口");
     }
 
     private void DrawGeneralSettings()
@@ -155,6 +166,33 @@ public class ConfigWindow : Window, IDisposable
         }
         ImGui.PopStyleColor(2);
         DrawTooltip("屏幕距离小于此值的对象将被合并显示\n点击可切换显示不同对象");
+
+        ImGui.Spacing();
+        ImGui.Spacing();
+        ImGui.Separator();
+        ImGui.Spacing();
+        ImGui.Spacing();
+
+        DrawSectionHeader("DataID 筛选", 0xFFE67300);
+
+        var enableDataIDFilter = config.EnableDataIDFilter;
+        if (ImGui.Checkbox("启用 DataID 筛选", ref enableDataIDFilter))
+        {
+            config.EnableDataIDFilter = enableDataIDFilter;
+            config.Save();
+        }
+        DrawTooltip("开启后，只显示指定 DataID 的对象\n关闭则显示所有对象");
+
+        ImGui.Spacing();
+
+        var filterDataIDs = config.FilterDataIDs ?? "";
+        ImGui.SetNextItemWidth(450);
+        if (ImGui.InputTextWithHint("##FilterDataIDs", "输入 DataID (逗号分隔，如: 123,456,789)", ref filterDataIDs, 500))
+        {
+            config.FilterDataIDs = filterDataIDs;
+            config.Save();
+        }
+        DrawTooltip("输入要筛选的 DataID\n多个 DataID 用逗号分隔\n例如：2000001,2000002,2000003");
 
         ImGui.EndChild();
     }
