@@ -319,7 +319,7 @@ public class ObjectListWindow : Window, IDisposable
 
             if (ImGui.Button("添加当前目标##AddCurrentTarget1", new Vector2(-1, 0)))
             {
-                var target = DService.Targets?.Target;
+                var target = TargetManager.Target;
                 if (target != null && !targetObjects1.Contains(target.GameObjectID))
                     targetObjects1.Add(target.GameObjectID);
             }
@@ -364,7 +364,7 @@ public class ObjectListWindow : Window, IDisposable
 
         if (ImGui.Button("添加当前目标##AddCurrentTarget", new Vector2(-1, 0)))
         {
-            var target = DService.Targets?.Target;
+            var target = TargetManager.Target;
             if (target != null && !targetObjects2.Contains(target.GameObjectID))
                 targetObjects2.Add(target.GameObjectID);
         }

@@ -112,7 +112,7 @@ public sealed class Plugin : IDalamudPlugin
             {
                 // no para
                 var localPlayer = DService.ObjectTable.LocalPlayer;
-                var target = DService.Targets?.Target;
+                var target = TargetManager.Target;
 
                 if (localPlayer == null)
                 {

@@ -29,6 +29,22 @@ public class MainWindow : Window, IDisposable
 
     public void Dispose() { }
 
+    private static unsafe bool IsScreenReady()
+    {
+        var nowLoading = NowLoading;
+        if (nowLoading != null && nowLoading->IsAddonAndNodesReady())
+            return false;
+
+        var fadeMiddle = FadeMiddle;
+        if (fadeMiddle != null && fadeMiddle->IsAddonAndNodesReady())
+            return false;
+
+        var fadeBack = FadeBack;
+        if (fadeBack != null && fadeBack->IsAddonAndNodesReady())
+            return false;
+
+        return true;
+    }
 
     public void OnUpdate()
     {
