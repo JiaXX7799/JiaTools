@@ -12,10 +12,22 @@ namespace JiaTools.Windows;
 public class MainWindow : Window, IDisposable
 {
     private readonly Configuration config;
+    
+    private sealed class GroupData(Vector2 anchorPos, List<GameObjectInfo> objects)
+    {
+        public Vector2 AnchorPos { get; } = anchorPos;
+        public List<GameObjectInfo> Objects { get; } = objects;
+    }
+
+    private static int UpdateFrame;
+    private static readonly Dictionary<uint, int>     LastSeenFrame           = new();
+    private static readonly Dictionary<uint, Vector2> SmoothedScreenPositions = new();
+    private static readonly Dictionary<uint, Vector2> StablePixelPositions    = new();
+
     private static readonly Dictionary<uint, Vector2> OverlayPositions = new();
     private static readonly List<GameObjectInfo> CachedGameObjects = [];
-    private static readonly Dictionary<Vector2, List<GameObjectInfo>> GroupedObjects = new();
-    private static readonly Dictionary<Vector2, int> GroupCurrentPage = new();
+    private static readonly Dictionary<uint, GroupData> GroupedObjects = new();
+    private static readonly Dictionary<uint, int> GroupCurrentPage = new();
 
     public MainWindow(Configuration config) : base(
         "JiaTools",
@@ -46,6 +58,80 @@ public class MainWindow : Window, IDisposable
         return true;
     }
 
+    private static float GetSmoothingAlpha()
+    {
+        var dt = ImGui.GetIO().DeltaTime;
+        if (!(dt > 0f))
+            dt = 1f / 60f;
+
+        // 时间常数
+        const float tau = 0.08f;
+        var alpha = 1f - MathF.Exp(-dt / tau);
+        return Math.Clamp(alpha, 0.05f, 1f);
+    }
+
+    private static Vector2 UpdateSmoothedPosition(uint entityId, Vector2 raw, float alpha)
+    {
+        if (SmoothedScreenPositions.TryGetValue(entityId, out var prev))
+        {
+            var delta = Vector2.Distance(prev, raw);
+            var adaptiveAlpha = alpha;
+            if (delta < 2f)
+                adaptiveAlpha = Math.Min(adaptiveAlpha, 0.08f);
+            else if (delta > 10f)
+                adaptiveAlpha = Math.Max(adaptiveAlpha, 0.35f);
+
+            raw = Vector2.Lerp(prev, raw, adaptiveAlpha);
+        }
+
+        SmoothedScreenPositions[entityId] = raw;
+        LastSeenFrame[entityId] = UpdateFrame;
+        return raw;
+    }
+
+    private static Vector2 GetStablePixelPosition(uint entityId, Vector2 smoothed)
+    {
+        if (!StablePixelPositions.TryGetValue(entityId, out var prev))
+        {
+            var initial = new Vector2(MathF.Round(smoothed.X), MathF.Round(smoothed.Y));
+            StablePixelPositions[entityId] = initial;
+            return initial;
+        }
+
+        var x = StableSnap(smoothed.X, prev.X);
+        var y = StableSnap(smoothed.Y, prev.Y);
+        var next = new Vector2(x, y);
+        StablePixelPositions[entityId] = next;
+        return next;
+    }
+
+    private static float StableSnap(float value, float prevPixel)
+    {
+        var delta = value - prevPixel;
+
+        if (MathF.Abs(delta) >= 3f)
+            return MathF.Round(value);
+
+        // 小抖动使用迟滞
+        const float threshold = 0.8f;
+        if (delta > threshold) return prevPixel + 1f;
+        if (delta < -threshold) return prevPixel - 1f;
+        return prevPixel;
+    }
+
+    private static void PruneStalePositions(int keepFrames = 180)
+    {
+        if (LastSeenFrame.Count == 0) return;
+
+        var minFrame = UpdateFrame - keepFrames;
+        foreach (var entityId in LastSeenFrame.Where(kvp => kvp.Value < minFrame).Select(kvp => kvp.Key).ToList())
+        {
+            LastSeenFrame.Remove(entityId);
+            SmoothedScreenPositions.Remove(entityId);
+            StablePixelPositions.Remove(entityId);
+        }
+    }
+
     public void OnUpdate()
     {
         if (!config.Enabled) return;
@@ -57,45 +143,54 @@ public class MainWindow : Window, IDisposable
             var localPlayer = DService.ObjectTable.LocalPlayer;
             if (localPlayer == null) return;
 
-        CachedGameObjects.Clear();
-        OverlayPositions.Clear();
-        GroupedObjects.Clear();
+            CachedGameObjects.Clear();
+            OverlayPositions.Clear();
+            GroupedObjects.Clear();
 
-        foreach (var obj in DService.ObjectTable)
-        {
-            if (obj.EntityID == 0) continue;
-            if (localPlayer?.Position == null || obj?.Position == null) continue;
-            if (Vector3.Distance(localPlayer.Position, obj.Position) > config.Range) continue;
-            if (!ShouldShowObject(obj)) continue;
-            if (!PassDataIDFilter(obj)) continue;
-
-            if (DService.Gui == null || !DService.Gui.WorldToScreen(obj.Position, out var screenPos)) continue;
-            var objInfo = CreateGameObjectInfo(obj);
-            if (objInfo != null) CachedGameObjects.Add(objInfo);
-            OverlayPositions[obj.EntityID] = screenPos;
-            if (CachedGameObjects.Count >= config.MaxObjects) break;
-        }
-
-        foreach (var objInfo in CachedGameObjects)
-        {
-            if (!OverlayPositions.TryGetValue(objInfo.EntityID, out var screenPos)) continue;
-
-            Vector2? nearestGroup = null;
-            var minDistance = float.MaxValue;
-
-            foreach (var existingGroup in GroupedObjects.Keys)
+            foreach (var obj in DService.ObjectTable)
             {
-                var distance = Vector2.Distance(screenPos, existingGroup);
-                if (!(distance < config.MergeDistance) || !(distance < minDistance)) continue;
-                minDistance = distance;
-                nearestGroup = existingGroup;
+                if (obj.EntityID == 0) continue;
+                if (localPlayer?.Position == null || obj?.Position == null) continue;
+                if (Vector3.Distance(localPlayer.Position, obj.Position) > config.Range) continue;
+                if (!ShouldShowObject(obj)) continue;
+                if (!PassDataIDFilter(obj)) continue;
+
+                if (DService.Gui == null || !DService.Gui.WorldToScreen(obj.Position, out var screenPos)) continue;
+                var objInfo = CreateGameObjectInfo(obj);
+                if (objInfo != null) CachedGameObjects.Add(objInfo);
+                OverlayPositions[obj.EntityID] = screenPos;
+                if (CachedGameObjects.Count >= config.MaxObjects) break;
             }
 
-            if (nearestGroup.HasValue)
-                GroupedObjects[nearestGroup.Value].Add(objInfo);
-            else
-                GroupedObjects[screenPos] = [objInfo];
-        }
+            UpdateFrame++;
+            var alpha = GetSmoothingAlpha();
+
+            foreach (var objInfo in CachedGameObjects.OrderBy(x => x.EntityID))
+            {
+                if (!OverlayPositions.TryGetValue(objInfo.EntityID, out var rawScreenPos)) continue;
+
+                var smoothed = UpdateSmoothedPosition(objInfo.EntityID, rawScreenPos, alpha);
+                var anchorPos = GetStablePixelPosition(objInfo.EntityID, smoothed);
+
+                uint? nearestGroup = null;
+                var minDistance = float.MaxValue;
+
+                foreach (var (existingGroupId, group) in GroupedObjects)
+                {
+                    var distance = Vector2.Distance(anchorPos, group.AnchorPos);
+                    if (distance >= config.MergeDistance || distance >= minDistance) continue;
+                    minDistance = distance;
+                    nearestGroup = existingGroupId;
+                }
+
+                if (nearestGroup.HasValue)
+                    GroupedObjects[nearestGroup.Value].Objects.Add(objInfo);
+                else
+                    GroupedObjects[objInfo.EntityID] = new GroupData(anchorPos, [objInfo]);
+            }
+
+            CleanupGroupCurrentPages();
+            PruneStalePositions();
         }
         catch (Exception ex)
         {
@@ -113,11 +208,14 @@ public class MainWindow : Window, IDisposable
         {
             var drawList = ImGui.GetForegroundDrawList();
 
-        foreach (var (groupPos, objects) in GroupedObjects)
+        foreach (var (groupKey, group) in GroupedObjects.OrderBy(kvp => kvp.Key))
         {
+            var objects = group.Objects;
             if (objects.Count == 0) continue;
 
-            GroupCurrentPage.TryAdd(groupPos, 0);
+            GroupCurrentPage.TryAdd(groupKey, 0);
+
+            var groupPos = group.AnchorPos;
 
             // 检查是否有正在读条的对象，优先显示
             var castingIndex = -1;
@@ -131,27 +229,22 @@ public class MainWindow : Window, IDisposable
             }
 
             // 如果有正在读条的对象，优先显示它
-            var currentPage = castingIndex >= 0 ? castingIndex : GroupCurrentPage[groupPos];
+            var currentPage = castingIndex >= 0 ? castingIndex : GroupCurrentPage[groupKey];
 
             if (currentPage >= objects.Count)
             {
                 currentPage = 0;
-                GroupCurrentPage[groupPos] = 0;
+                GroupCurrentPage[groupKey] = 0;
             }
 
             // 如果不是因为读条而显示的页面，保存当前页码
             if (castingIndex < 0)
-                GroupCurrentPage[groupPos] = currentPage;
+                GroupCurrentPage[groupKey] = currentPage;
 
             var objInfo = objects[currentPage];
             var (bgMin, bgMax, lineRects) = DrawObjectInfoAt(drawList, objInfo, groupPos, objects.Count, currentPage);
 
-            ImGui.SetNextWindowPos(bgMin);
-            ImGui.SetNextWindowSize(bgMax - bgMin);
-            
-
-            var windowID = $"##JiaTools_{groupPos.X:F0}_{groupPos.Y:F0}";
-            
+            var windowID = $"##JiaTools_{groupKey:X8}";
 
             ImGui.SetNextWindowPos(bgMin, ImGuiCond.Always);
             ImGui.SetNextWindowSize(bgMax - bgMin, ImGuiCond.Always);
@@ -170,7 +263,7 @@ public class MainWindow : Window, IDisposable
             try
             {
                 if (ImGui.Begin(windowID, windowFlags))
-                    HandleClickEventsSafely(lineRects, objects, currentPage, groupPos);
+                    HandleClickEventsSafely(lineRects, objects, currentPage, groupKey);
 
                 ImGui.End();
             }
@@ -188,7 +281,7 @@ public class MainWindow : Window, IDisposable
     }
 
     private static void HandleClickEventsSafely(List<(Vector2 lineMin, Vector2 lineMax, string copyValue)> lineRects, 
-        List<GameObjectInfo> objects, int currentPage, Vector2 groupPos)
+        List<GameObjectInfo> objects, int currentPage, uint groupKey)
     {
         try
         {
@@ -227,13 +320,27 @@ public class MainWindow : Window, IDisposable
             if (!clickedLine && objects.Count > 1)
             {
                 var newPage = (currentPage + 1) % objects.Count;
-                GroupCurrentPage[groupPos] = newPage;
+                GroupCurrentPage[groupKey] = newPage;
             }
         }
         catch (Exception ex)
         {
             Error($"Error in HandleClickEventsSafely: {ex.Message}", ex);
         }
+    }
+
+    private static void CleanupGroupCurrentPages()
+    {
+        if (GroupCurrentPage.Count == 0) return;
+        if (GroupedObjects.Count == 0)
+        {
+            GroupCurrentPage.Clear();
+            return;
+        }
+
+        var activeKeys = GroupedObjects.Keys.ToHashSet();
+        foreach (var key in GroupCurrentPage.Keys.Where(k => !activeKeys.Contains(k)).ToList())
+            GroupCurrentPage.Remove(key);
     }
 
     private (Vector2 bgMin, Vector2 bgMax, List<(Vector2 lineMin, Vector2 lineMax, string copyValue)> lineRects)
