@@ -33,6 +33,7 @@ public class Configuration : IPluginConfiguration
     public bool ShowMarker { get; set; } = true;
     public bool EnableDataIDFilter { get; set; }
     public string FilterDataIDs { get; set; } = "";
+    public bool EnableCastingFilter { get; set; }
 
     public void Save()
     {

@@ -194,6 +194,22 @@ public class ConfigWindow : Window, IDisposable
         }
         DrawTooltip("输入要筛选的 DataID\n多个 DataID 用逗号分隔\n例如：2000001,2000002,2000003");
 
+        ImGui.Spacing();
+        ImGui.Spacing();
+        ImGui.Separator();
+        ImGui.Spacing();
+        ImGui.Spacing();
+
+        DrawSectionHeader("读条筛选", 0xFFE600B8);
+
+        var enableCastingFilter = config.EnableCastingFilter;
+        if (ImGui.Checkbox("启用读条筛选", ref enableCastingFilter))
+        {
+            config.EnableCastingFilter = enableCastingFilter;
+            config.Save();
+        }
+        DrawTooltip("开启后，只显示正在读条的对象\n关闭则显示所有对象");
+
         ImGui.EndChild();
     }
 

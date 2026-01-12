@@ -154,6 +154,7 @@ public class MainWindow : Window, IDisposable
                 if (Vector3.Distance(localPlayer.Position, obj.Position) > config.Range) continue;
                 if (!ShouldShowObject(obj)) continue;
                 if (!PassDataIDFilter(obj)) continue;
+                if (!PassCastingFilter(obj)) continue;
 
                 if (DService.Gui == null || !DService.Gui.WorldToScreen(obj.Position, out var screenPos)) continue;
                 var objInfo = CreateGameObjectInfo(obj);
@@ -574,6 +575,24 @@ public class MainWindow : Window, IDisposable
         catch (Exception ex)
         {
             Error($"Error in PassDataIDFilter: {ex.Message}", ex);
+            return true;
+        }
+    }
+
+    private bool PassCastingFilter(IGameObject obj)
+    {
+        if (!config.EnableCastingFilter) return true;
+
+        try
+        {
+            if (obj is IBattleChara battleChara)
+                return battleChara.IsCasting;
+
+            return false;
+        }
+        catch (Exception ex)
+        {
+            Error($"Error in PassCastingFilter: {ex.Message}", ex);
             return true;
         }
     }
