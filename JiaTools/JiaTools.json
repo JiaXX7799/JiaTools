@@ -5,16 +5,19 @@
   "Description": "在游戏中显示对象的详细信息，包括玩家、NPC、事件对象等的 EntityID、DataID、位置、旋转、距离、生命值、咏唱信息、状态效果等。",
   "InternalName": "JiaTools",
   "ApplicableVersion": "any",
+  "EffectiveVersion": "1.0.0.8",
+  "EffectiveApiLevel": 14,
+  "AssemblyVersion": "1.0.0.8",
   "Tags": [
     "utility",
     "overlay",
     "debug"
   ],
-  "DalamudApiLevel": 13,
+  "DalamudApiLevel": 14,
   "LoadRequiredState": 0,
   "LoadSync": false,
   "CanUnloadAsync": false,
   "LoadPriority": 0,
   "IconUrl": "https://raw.githubusercontent.com/JiaXX7799/DalamudPlugins/main/plugins/JiaTools/icon.png",
-  "Changelog": "Make ObjectTable UI Great Again"
+  "Changelog": "添加平滑"
 }

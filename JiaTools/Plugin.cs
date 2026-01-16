@@ -2,8 +2,8 @@ using System;
 using System.Numerics;
 using Dalamud.Plugin;
 using Dalamud.Interface.Windowing;
+using Dalamud.Plugin.Services;
 using JiaTools.Windows;
-using KamiToolKit;
 
 namespace JiaTools;
 
@@ -15,8 +15,7 @@ public sealed class Plugin : IDalamudPlugin
     private readonly Configuration configuration;
     private readonly MainWindow mainWindow;
     private readonly ObjectListWindow objectListWindow;
-    private readonly NativeController nativeController;
-    private readonly NativeConfigWindow nativeConfigWindow;
+    private readonly ConfigWindow configWindow;
 
     public Plugin(IDalamudPluginInterface pluginInterface)
     {
@@ -27,71 +26,57 @@ public sealed class Plugin : IDalamudPlugin
             configuration = pluginInterface.GetPluginConfig() as Configuration ?? new Configuration();
             configuration.Save();
 
-            // Initialize NativeController for Native UI support
-            nativeController = new NativeController(pluginInterface);
-
             windowSystem = new WindowSystem("JiaTools");
 
             mainWindow = new MainWindow(configuration);
             objectListWindow = new ObjectListWindow();
+            configWindow = new ConfigWindow(configuration, objectListWindow);
 
             windowSystem.AddWindow(mainWindow);
             windowSystem.AddWindow(objectListWindow);
+            windowSystem.AddWindow(configWindow);
 
-            // Initialize Native Config Window
-            nativeConfigWindow = new NativeConfigWindow(configuration, () =>
-            {
-                DService.Framework?.RunOnTick(() => objectListWindow.Toggle());
-            })
-            {
-                InternalName = "JiaToolsConfig",
-                Title = "JiaTools 配置",
-                Size = new Vector2(350.0f, 550.0f),
-                Position = new Vector2(100.0f, 100.0f),
-                NativeController = nativeController,
-            };
-
-            DService.UIBuilder.Draw += windowSystem.Draw;
-            DService.UIBuilder.Draw += objectListWindow.DrawLineOverlay;
-            DService.UIBuilder.OpenConfigUi += () => nativeConfigWindow.Toggle();
-            DService.UIBuilder.OpenMainUi += () =>
+            DService.Instance().UIBuilder.Draw += windowSystem.Draw;
+            DService.Instance().UIBuilder.Draw += objectListWindow.DrawLineOverlay;
+            DService.Instance().UIBuilder.OpenConfigUi += () => configWindow.Toggle();
+            DService.Instance().UIBuilder.OpenMainUi += () =>
             {
                 configuration.Enabled = !configuration.Enabled;
                 configuration.Save();
             };
 
-            DService.Framework.Update += OnFrameworkUpdate;
+            DService.Instance().Framework.Update += OnFrameworkUpdate;
 
             // 注册命令
-            DService.Command.AddHandler("/jtools", new Dalamud.Game.Command.CommandInfo(OnCommand)
+            DService.Instance().Command.AddHandler("/jtools", new Dalamud.Game.Command.CommandInfo(OnCommand)
             {
                 HelpMessage = "切换 JiaTools 悬浮窗的开启/关闭"
             });
-            
-            DService.Command.AddHandler("/jconfig", new Dalamud.Game.Command.CommandInfo(OnConfigCommand)
+
+            DService.Instance().Command.AddHandler("/jconfig", new Dalamud.Game.Command.CommandInfo(OnConfigCommand)
             {
                 HelpMessage = "打开 JiaTools 配置窗口"
             });
-            
-            DService.Command.AddHandler("/jlist", new Dalamud.Game.Command.CommandInfo(OnListCommand)
+
+            DService.Instance().Command.AddHandler("/jlist", new Dalamud.Game.Command.CommandInfo(OnListCommand)
             {
                 HelpMessage = "打开 JiaTools Object List窗口"
             });
 
-            DService.Command.AddHandler("/jdraw", new Dalamud.Game.Command.CommandInfo(OnDrawCommand)
+            DService.Instance().Command.AddHandler("/jdraw", new Dalamud.Game.Command.CommandInfo(OnDrawCommand)
             {
                 HelpMessage = "连线指定对象 　/jdraw <EntityId1> <EntityId2>(只有一个EntityId时，EntityId1为自己)"
             });
 
-            DService.Command.AddHandler("/jclear", new Dalamud.Game.Command.CommandInfo(OnClearDrawCommand)
+            DService.Instance().Command.AddHandler("/jclear", new Dalamud.Game.Command.CommandInfo(OnClearDrawCommand)
             {
                 HelpMessage = "清除所有连线绘图"
             });
         }
         catch (Exception ex)
         {
-            if (DService.Log != null)
-                DService.Log.Error(ex, "Failed to initialize JiaTools");
+            if (DService.Instance().Log != null)
+                DService.Instance().Log.Error(ex, "Failed to initialize JiaTools");
             else
                 throw new InvalidOperationException("Failed to initialize JiaTools and logging is unavailable", ex);
             throw;
@@ -104,12 +89,12 @@ public sealed class Plugin : IDalamudPlugin
         configuration.Save();
 
         var status = configuration.Enabled ? "已开启" : "已关闭";
-        DService.Chat?.Print($"[JiaTools] 悬浮窗{status}");
+        DService.Instance().Chat?.Print($"[JiaTools] 悬浮窗{status}");
     }
 
     private void OnConfigCommand(string command, string args)
     {
-        nativeConfigWindow.Toggle();
+        configWindow.Toggle();
     }
     
     private void OnListCommand(string command, string args)
@@ -126,8 +111,8 @@ public sealed class Plugin : IDalamudPlugin
             if (parts.Length == 0)
             {
                 // no para
-                var localPlayer = DService.ClientState?.LocalPlayer;
-                var target = DService.Targets?.Target;
+                var localPlayer = DService.Instance().ObjectTable.LocalPlayer;
+                var target = TargetManager.Target;
 
                 if (localPlayer == null)
                 {
@@ -141,7 +126,7 @@ public sealed class Plugin : IDalamudPlugin
                     return;
                 }
 
-                if (target.GameObjectID == localPlayer.EntityId)
+                if (target.GameObjectID == localPlayer.EntityID)
                 {
                     NotificationWarning("目标不能是自己");
                     return;
@@ -178,7 +163,7 @@ public sealed class Plugin : IDalamudPlugin
         }
         catch (Exception ex)
         {
-            DService.Log?.Error(ex, "Failed to execute /jdraw command");
+            DService.Instance().Log?.Error(ex, "Failed to execute /jdraw command");
             NotificationError($"命令执行失败: {ex.Message}");
         }
     }
@@ -192,7 +177,7 @@ public sealed class Plugin : IDalamudPlugin
         }
         catch (Exception ex)
         {
-            DService.Log?.Error(ex, "Failed to execute /jclear command");
+            DService.Instance().Log?.Error(ex, "Failed to execute /jclear command");
             NotificationError($"命令执行失败: {ex.Message}");
         }
     }
@@ -204,28 +189,25 @@ public sealed class Plugin : IDalamudPlugin
 
     public void Dispose()
     {
-        if (DService.Command != null)
+        if (DService.Instance().Command != null)
         {
-            DService.Command.RemoveHandler("/jtools");
-            DService.Command.RemoveHandler("/jconfig");
-            DService.Command.RemoveHandler("/jlist");
-            DService.Command.RemoveHandler("/jdraw");
-            DService.Command.RemoveHandler("/jclear");
+            DService.Instance().Command.RemoveHandler("/jtools");
+            DService.Instance().Command.RemoveHandler("/jconfig");
+            DService.Instance().Command.RemoveHandler("/jlist");
+            DService.Instance().Command.RemoveHandler("/jdraw");
+            DService.Instance().Command.RemoveHandler("/jclear");
         }
 
-        if (DService.Framework != null)
-            DService.Framework.Update -= OnFrameworkUpdate;
+        if (DService.Instance().Framework != null)
+            DService.Instance().Framework.Update -= OnFrameworkUpdate;
 
-        if (DService.UIBuilder != null)
-            DService.UIBuilder.Draw -= objectListWindow.DrawLineOverlay;
-
-        // Dispose Native UI components
-        nativeConfigWindow.Dispose();
-        nativeController.Dispose();
+        if (DService.Instance().UIBuilder != null)
+            DService.Instance().UIBuilder.Draw -= objectListWindow.DrawLineOverlay;
 
         windowSystem.RemoveAllWindows();
         mainWindow.Dispose();
         objectListWindow.Dispose();
+        configWindow.Dispose();
         DService.Uninit();
     }
 }

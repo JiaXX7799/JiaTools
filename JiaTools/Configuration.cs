@@ -31,14 +31,17 @@ public class Configuration : IPluginConfiguration
     public bool ShowHealth { get; set; } = true;
     public bool ShowMana { get; set; } = true;
     public bool ShowMarker { get; set; } = true;
+    public bool EnableDataIDFilter { get; set; }
+    public string FilterDataIDs { get; set; } = "";
+    public bool EnableCastingFilter { get; set; }
 
     public void Save()
     {
-        if (DService.PI == null)
+        if (DService.Instance().PI == null)
         {
-            DService.Log?.Error("Cannot save configuration: Plugin interface not initialized");
+            DService.Instance().Log?.Error("Cannot save configuration: Plugin interface not initialized");
             return;
         }
-        DService.PI.SavePluginConfig(this);
+        DService.Instance().PI.SavePluginConfig(this);
     }
 }
