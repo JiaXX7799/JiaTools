@@ -21,7 +21,7 @@
         <RestorePackagesWithLockFile>true</RestorePackagesWithLockFile>
         <PlatformTarget>AnyCPU</PlatformTarget>
         <UseWindowsForms>true</UseWindowsForms>
-        <CopyLocalLockFileAssemblies>false</CopyLocalLockFileAssemblies>
+        <CopyLocalLockFileAssemblies>true</CopyLocalLockFileAssemblies>
         <BaseOutputPath>$(SolutionDir)bin</BaseOutputPath>
         <SatelliteResourceLanguages>xxx</SatelliteResourceLanguages>
         <Use_DalamudPackager>false</Use_DalamudPackager>
@@ -35,6 +35,15 @@
 
     <ItemGroup>
         <ProjectReference Include="..\OmenTools\OmenTools.csproj" />
+    </ItemGroup>
+
+    <ItemGroup>
+        <PackageReference Include="GuerrillaNtp" Version="3.1.0">
+            <Private>true</Private>
+        </PackageReference>
+        <PackageReference Include="TinyPinyin" Version="1.1.0">
+            <Private>true</Private>
+        </PackageReference>
     </ItemGroup>
 
     <ItemGroup>
