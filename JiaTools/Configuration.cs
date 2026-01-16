@@ -37,11 +37,11 @@ public class Configuration : IPluginConfiguration
 
     public void Save()
     {
-        if (DService.PI == null)
+        if (DService.Instance().PI == null)
         {
-            DService.Log?.Error("Cannot save configuration: Plugin interface not initialized");
+            DService.Instance().Log?.Error("Cannot save configuration: Plugin interface not initialized");
             return;
         }
-        DService.PI.SavePluginConfig(this);
+        DService.Instance().PI.SavePluginConfig(this);
     }
 }

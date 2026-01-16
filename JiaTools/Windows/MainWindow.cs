@@ -5,7 +5,9 @@ using System.Numerics;
 using Dalamud.Interface.Windowing;
 using Dalamud.Game.ClientState.Objects.Enums;
 using FFXIVClientStructs.FFXIV.Client.Game.Character;
+using OmenTools.Extensions;
 using static JiaTools.Windows.Colors;
+using static OmenTools.Infos.GameAddon;
 
 namespace JiaTools.Windows;
 
@@ -139,15 +141,15 @@ public class MainWindow : Window, IDisposable
 
         try
         {
-            if (DService.ObjectTable == null) return;
-            var localPlayer = DService.ObjectTable.LocalPlayer;
+            if (DService.Instance().ObjectTable == null) return;
+            var localPlayer = DService.Instance().ObjectTable.LocalPlayer;
             if (localPlayer == null) return;
 
             CachedGameObjects.Clear();
             OverlayPositions.Clear();
             GroupedObjects.Clear();
 
-            foreach (var obj in DService.ObjectTable)
+            foreach (var obj in DService.Instance().ObjectTable)
             {
                 if (obj.EntityID == 0) continue;
                 if (localPlayer?.Position == null || obj?.Position == null) continue;
@@ -156,7 +158,7 @@ public class MainWindow : Window, IDisposable
                 if (!PassDataIDFilter(obj)) continue;
                 if (!PassCastingFilter(obj)) continue;
 
-                if (DService.Gui == null || !DService.Gui.WorldToScreen(obj.Position, out var screenPos)) continue;
+                if (DService.Instance().GameGUI == null || !DService.Instance().GameGUI.WorldToScreen(obj.Position, out var screenPos)) continue;
                 var objInfo = CreateGameObjectInfo(obj);
                 if (objInfo != null) CachedGameObjects.Add(objInfo);
                 OverlayPositions[obj.EntityID] = screenPos;
@@ -304,7 +306,7 @@ public class MainWindow : Window, IDisposable
                         try
                         {
                             ImGui.SetClipboardText(copyValue);
-                            //DService.Chat.Print($"已复制: {copyValue}");
+                            //DService.Instance().Chat.Print($"已复制: {copyValue}");
                             HelpersOm.NotificationInfo($"已复制: {copyValue}");
                             HelpersOm.Debug($"已复制: {copyValue}");
                         }
@@ -540,8 +542,8 @@ public class MainWindow : Window, IDisposable
 
     private bool ShouldShowObject(IGameObject obj)
     {
-        if (DService.ObjectTable?.LocalPlayer == null) return false;
-        var localPlayer = DService.ObjectTable.LocalPlayer;
+        if (DService.Instance().ObjectTable?.LocalPlayer == null) return false;
+        var localPlayer = DService.Instance().ObjectTable.LocalPlayer;
 
         return obj.ObjectKind switch
         {
@@ -599,7 +601,7 @@ public class MainWindow : Window, IDisposable
 
     private static GameObjectInfo? CreateGameObjectInfo(IGameObject obj)
     {
-        var localPlayer = DService.ObjectTable?.LocalPlayer;
+        var localPlayer = DService.Instance().ObjectTable?.LocalPlayer;
         var distance = localPlayer?.Position != null && obj?.Position != null
             ? Vector3.Distance(localPlayer.Position, obj.Position)
             : -1f;
@@ -651,7 +653,7 @@ public class MainWindow : Window, IDisposable
                 var castTargetID = battleChara.CastTargetObjectID;
                 if (castTargetID != 0)
                 {
-                    var castTarget = DService.ObjectTable?.SearchByID(castTargetID);
+                    var castTarget = DService.Instance().ObjectTable?.SearchByID(castTargetID);
                     objInfo.CastTargetName = castTarget?.Name?.TextValue ?? $"ID:{castTargetID}";
                 }
                 else

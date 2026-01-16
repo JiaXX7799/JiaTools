@@ -43,13 +43,13 @@ public class ObjectListWindow : Window, IDisposable
             MaximumSize = new Vector2(1200, 900)
         };
         
-        DService.ClientState.TerritoryChanged += OnTerritoryChanged;
+        DService.Instance().ClientState.TerritoryChanged += OnTerritoryChanged;
     }
 
     public void Dispose()
     {
-        if (DService.ClientState != null)
-            DService.ClientState.TerritoryChanged -= OnTerritoryChanged;
+        if (DService.Instance().ClientState != null)
+            DService.Instance().ClientState.TerritoryChanged -= OnTerritoryChanged;
         
         enableLine = false;
         targetObjects1.Clear();
@@ -64,7 +64,7 @@ public class ObjectListWindow : Window, IDisposable
             targetObjects1.Clear();
             targetObjects2.Clear();
             target1IsLocalPlayer = false;
-            DService.Log?.Debug($"ObjectListWindow: Territory changed to {territoryId}, cleared line targets");
+            DService.Instance().Log?.Debug($"ObjectListWindow: Territory changed to {territoryId}, cleared line targets");
         }
         catch (Exception e)
         {
@@ -100,11 +100,11 @@ public class ObjectListWindow : Window, IDisposable
                 ImGui.TableHeadersRow();
 
                 // draw lsit
-                if (DService.ObjectTable != null)
+                if (DService.Instance().ObjectTable != null)
                 {
                     try
                     {
-                        foreach (var obj in DService.ObjectTable)
+                        foreach (var obj in DService.Instance().ObjectTable)
                         {
                             if (obj == null || !obj.IsValid()) continue;
 
@@ -174,7 +174,7 @@ public class ObjectListWindow : Window, IDisposable
                     }
                     catch (Exception ex)
                     {
-                        DService.Log?.Error($"Error drawing object list: {ex.Message}");
+                        DService.Instance().Log?.Error($"Error drawing object list: {ex.Message}");
                     }
                 }
 
@@ -212,7 +212,7 @@ public class ObjectListWindow : Window, IDisposable
         }
 
         ImGui.SameLine();
-        var count = DService.ObjectTable?.Count() ?? 0;
+        var count = DService.Instance().ObjectTable?.Count() ?? 0;
         ImGui.TextDisabled($"总计: {count} 个对象");
     }
 
@@ -407,14 +407,14 @@ public class ObjectListWindow : Window, IDisposable
         try
         {
             // basic
-            if (DService.ClientState == null || DService.ObjectTable == null || DService.Gui == null)
+            if (DService.Instance().ClientState == null || DService.Instance().ObjectTable == null || DService.Instance().GameGUI == null)
                 return;
             
             // check loading
-            if (DService.ObjectTable.LocalPlayer == null)
+            if (DService.Instance().ObjectTable.LocalPlayer == null)
                 return;
             
-            if (DService.ClientState.TerritoryType == 0)
+            if (DService.Instance().ClientState.TerritoryType == 0)
                 return;
 
             var drawList = ImGui.GetForegroundDrawList();
@@ -424,7 +424,7 @@ public class ObjectListWindow : Window, IDisposable
             // check Target1 list
             if (target1IsLocalPlayer)
             {
-                var localPlayer = DService.ObjectTable.LocalPlayer;
+                var localPlayer = DService.Instance().ObjectTable.LocalPlayer;
                 if (localPlayer != null && localPlayer.IsValid())
                     sources.Add(localPlayer.EntityID);
             }
@@ -446,16 +446,16 @@ public class ObjectListWindow : Window, IDisposable
                         var source1Id = sources[i];
                         var target2Id = targetObjects2[i];
 
-                        var obj1 = DService.ObjectTable.FirstOrDefault(o => o != null && o.IsValid() && o.GameObjectID == source1Id);
+                        var obj1 = DService.Instance().ObjectTable.FirstOrDefault(o => o != null && o.IsValid() && o.GameObjectID == source1Id);
                         if (obj1 == null) continue;
 
-                        var obj2 = DService.ObjectTable.FirstOrDefault(o => o != null && o.IsValid() && o.GameObjectID == target2Id);
+                        var obj2 = DService.Instance().ObjectTable.FirstOrDefault(o => o != null && o.IsValid() && o.GameObjectID == target2Id);
                         if (obj2 == null) continue;
 
-                        if (!DService.Gui.WorldToScreen(obj1.Position, out var pos1) || !IsValidScreenPosition(pos1))
+                        if (!DService.Instance().GameGUI.WorldToScreen(obj1.Position, out var pos1) || !IsValidScreenPosition(pos1))
                             continue;
 
-                        if (!DService.Gui.WorldToScreen(obj2.Position, out var pos2) || !IsValidScreenPosition(pos2))
+                        if (!DService.Instance().GameGUI.WorldToScreen(obj2.Position, out var pos2) || !IsValidScreenPosition(pos2))
                             continue;
 
                         drawList.AddLine(pos1, pos2, LineColor, 4f);
@@ -475,10 +475,10 @@ public class ObjectListWindow : Window, IDisposable
                 {
                     try
                     {
-                        var obj1 = DService.ObjectTable.FirstOrDefault(o => o != null && o.IsValid() && o.GameObjectID == source1Id);
+                        var obj1 = DService.Instance().ObjectTable.FirstOrDefault(o => o != null && o.IsValid() && o.GameObjectID == source1Id);
                         if (obj1 == null) continue;
 
-                        if (!DService.Gui.WorldToScreen(obj1.Position, out var pos1))
+                        if (!DService.Instance().GameGUI.WorldToScreen(obj1.Position, out var pos1))
                             continue;
                         
                         if (!IsValidScreenPosition(pos1))
@@ -488,10 +488,10 @@ public class ObjectListWindow : Window, IDisposable
                         {
                             try
                             {
-                                var obj2 = DService.ObjectTable.FirstOrDefault(o => o != null && o.IsValid() && o.GameObjectID == target2Id);
+                                var obj2 = DService.Instance().ObjectTable.FirstOrDefault(o => o != null && o.IsValid() && o.GameObjectID == target2Id);
                                 if (obj2 == null) continue;
 
-                                if (DService.Gui.WorldToScreen(obj2.Position, out var pos2) && IsValidScreenPosition(pos2))
+                                if (DService.Instance().GameGUI.WorldToScreen(obj2.Position, out var pos2) && IsValidScreenPosition(pos2))
                                 {
                                     drawList.AddLine(pos1, pos2, LineColor, 4f);
                                     drawList.AddCircleFilled(pos2, 7f, DotColor);
@@ -514,7 +514,7 @@ public class ObjectListWindow : Window, IDisposable
         }
         catch (Exception ex)
         {
-            DService.Log?.Debug($"DrawObjectLine error: {ex.Message}");
+            DService.Instance().Log?.Debug($"DrawObjectLine error: {ex.Message}");
         }
     }
 
