@@ -1,13 +1,13 @@
 {
-  "Author": "JiaXX, Veever, cyf",
+  "Author": "JiaXX, Veever, cyf, 丨",
   "Name": "JiaTools",
   "Punchline": "在游戏中显示对象的详细信息",
   "Description": "在游戏中显示对象的详细信息，包括玩家、NPC、事件对象等的 EntityID、DataID、位置、旋转、距离、生命值、咏唱信息、状态效果等。",
   "InternalName": "JiaTools",
   "ApplicableVersion": "any",
-  "EffectiveVersion": "1.0.0.9",
+  "EffectiveVersion": "1.0.1.0",
   "EffectiveApiLevel": 14,
-  "AssemblyVersion": "1.0.0.9",
+  "AssemblyVersion": "1.0.1.0",
   "Tags": [
     "utility",
     "overlay",
