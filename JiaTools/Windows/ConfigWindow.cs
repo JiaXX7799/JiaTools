@@ -1,6 +1,7 @@
 using System;
 using System.Numerics;
 using Dalamud.Interface.Windowing;
+using JiaTools.Helpers;
 
 namespace JiaTools.Windows;
 
@@ -8,6 +9,7 @@ public class ConfigWindow : Window, IDisposable
 {
     private readonly Configuration config;
     private readonly ObjectListWindow objectListWindow;
+    private readonly CleanBackgroundManager? backgroundManager;
 
     public ConfigWindow(Configuration config, ObjectListWindow objectListWindow) : base(
         "JiaTools 配置###JiaToolsConfig",
@@ -22,12 +24,60 @@ public class ConfigWindow : Window, IDisposable
             MinimumSize = new Vector2(600, 500),
             MaximumSize = new Vector2(1000, 1000)
         };
+
+        try
+        {
+            backgroundManager = new CleanBackgroundManager(DService.Instance().Log);
+            backgroundManager.Initialize();
+            DService.Instance().Log.Information("磨砂玻璃背景管理器初始化成功");
+        }
+        catch (Exception ex)
+        {
+            DService.Instance().Log.Error(ex, "磨砂玻璃背景管理器初始化失败");
+            backgroundManager = null;
+        }
     }
 
-    public void Dispose() { }
+    public void Dispose()
+    {
+        backgroundManager?.Dispose();
+    }
+
+    public override void PreDraw()
+    {
+        if (config.UseFrostedGlass)
+        {
+            Flags |= ImGuiWindowFlags.NoBackground;
+            ImGui.PushStyleColor(ImGuiCol.ChildBg, new Vector4(0, 0, 0, 0));
+        }
+        else
+        {
+            Flags &= ~ImGuiWindowFlags.NoBackground;
+        }
+    }
+
+    public override void PostDraw()
+    {
+        if (config.UseFrostedGlass)
+        {
+            ImGui.PopStyleColor();
+        }
+    }
 
     public override void Draw()
     {
+        if (config.UseFrostedGlass && backgroundManager != null)
+        {
+            try
+            {
+                backgroundManager.DrawBackground(config.Opacity);
+            }
+            catch (Exception ex)
+            {
+                DService.Instance().Log.Error(ex, "绘制磨砂背景时出错");
+            }
+        }
+
         DrawHeader();
         ImGui.Spacing();
         ImGui.Separator();
@@ -122,6 +172,14 @@ public class ConfigWindow : Window, IDisposable
         }
         ImGui.PopStyleColor(2);
         DrawTooltip("调整文字大小\n建议范围：80% - 120%");
+
+        var useFrostedGlass = config.UseFrostedGlass;
+        if (ImGui.Checkbox("磨砂玻璃背景", ref useFrostedGlass))
+        {
+            config.UseFrostedGlass = useFrostedGlass;
+            config.Save();
+        }
+        DrawTooltip("启用磨砂玻璃背景效果\n关闭则使用默认背景");
 
         ImGui.Spacing();
         ImGui.Spacing();

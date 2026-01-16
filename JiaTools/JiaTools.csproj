@@ -41,6 +41,7 @@
         <PackageReference Include="GuerrillaNtp" Version="3.1.0">
             <Private>true</Private>
         </PackageReference>
+        <PackageReference Include="TerraFX.Interop.Windows" Version="10.0.26100.6" />
         <PackageReference Include="TinyPinyin" Version="1.1.0">
             <Private>true</Private>
         </PackageReference>
@@ -50,6 +51,9 @@
         <Content Include="JiaTools.json">
             <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
         </Content>
+        <EmbeddedResource Include="Shaders\AlphaFix.cso" />
+        <EmbeddedResource Include="Shaders\HBlur.cso" />
+        <EmbeddedResource Include="Shaders\VBlur.cso" />
     </ItemGroup>
 
 </Project>

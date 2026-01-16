@@ -34,6 +34,7 @@ public class Configuration : IPluginConfiguration
     public bool EnableDataIDFilter { get; set; }
     public string FilterDataIDs { get; set; } = "";
     public bool EnableCastingFilter { get; set; }
+    public bool UseFrostedGlass { get; set; }
 
     public void Save()
     {
