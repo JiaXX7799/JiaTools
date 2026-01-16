@@ -13,15 +13,15 @@ public class ConfigWindow : Window, IDisposable
 
     public ConfigWindow(Configuration config, ObjectListWindow objectListWindow) : base(
         "JiaTools 配置###JiaToolsConfig",
-        ImGuiWindowFlags.NoScrollbar | ImGuiWindowFlags.NoScrollWithMouse)
+        ImGuiWindowFlags.NoScrollbar | ImGuiWindowFlags.NoScrollWithMouse | ImGuiWindowFlags.NoTitleBar)
     {
         this.config = config;
         this.objectListWindow = objectListWindow;
-        Size = new Vector2(650, 620);
+        Size = new Vector2(400, 520);
         SizeCondition = ImGuiCond.FirstUseEver;
         SizeConstraints = new WindowSizeConstraints
         {
-            MinimumSize = new Vector2(600, 500),
+            MinimumSize = new Vector2(400, 520),
             MaximumSize = new Vector2(1000, 1000)
         };
 
@@ -78,6 +78,7 @@ public class ConfigWindow : Window, IDisposable
             }
         }
 
+        DrawCustomTitleBar();
         DrawHeader();
         ImGui.Spacing();
         ImGui.Separator();
@@ -104,6 +105,81 @@ public class ConfigWindow : Window, IDisposable
             }
 
             ImGui.EndTabBar();
+        }
+    }
+
+    private void DrawCustomTitleBar()
+    {
+        var titleBarHeight = 35f;
+        var windowPos = ImGui.GetWindowPos();
+        var windowWidth = ImGui.GetWindowWidth();
+
+        var titleBarMin = windowPos;
+        var titleBarMax = new Vector2(windowPos.X + windowWidth, windowPos.Y + titleBarHeight);
+
+        var drawList = ImGui.GetWindowDrawList();
+        var titleBgColor = config.UseFrostedGlass
+            ? ImGui.ColorConvertFloat4ToU32(new Vector4(0.15f, 0.15f, 0.2f, 0.3f))
+            : ImGui.ColorConvertFloat4ToU32(new Vector4(0.1f, 0.1f, 0.15f, 0.9f));
+
+        drawList.AddRectFilled(titleBarMin, titleBarMax, titleBgColor);
+
+        var titleText = "JiaTools 配置";
+        var titleSize = ImGui.CalcTextSize(titleText);
+        var titlePos = new Vector2(
+            windowPos.X + (windowWidth - titleSize.X) * 0.5f,
+            windowPos.Y + (titleBarHeight - titleSize.Y) * 0.5f
+        );
+
+        var titleColor = ImGui.ColorConvertFloat4ToU32(new Vector4(0.8f, 0.9f, 1.0f, 1.0f));
+        drawList.AddText(titlePos, titleColor, titleText);
+
+        var closeButtonSize = 25f;
+        var closeButtonPos = new Vector2(windowPos.X + windowWidth - closeButtonSize - 5f, windowPos.Y + 5f);
+        var closeButtonMin = closeButtonPos;
+        var closeButtonMax = new Vector2(closeButtonPos.X + closeButtonSize, closeButtonPos.Y + closeButtonSize);
+
+        var mousePos = ImGui.GetMousePos();
+        var isHovered = mousePos.X >= closeButtonMin.X && mousePos.X <= closeButtonMax.X &&
+                       mousePos.Y >= closeButtonMin.Y && mousePos.Y <= closeButtonMax.Y;
+
+        var closeButtonColor = isHovered
+            ? ImGui.ColorConvertFloat4ToU32(new Vector4(0.8f, 0.2f, 0.2f, 0.8f))
+            : ImGui.ColorConvertFloat4ToU32(new Vector4(0.4f, 0.4f, 0.4f, 0.6f));
+
+        drawList.AddRectFilled(closeButtonMin, closeButtonMax, closeButtonColor, 3f);
+
+        var crossSize = 12f;
+        var crossCenter = new Vector2(
+            closeButtonPos.X + closeButtonSize * 0.5f,
+            closeButtonPos.Y + closeButtonSize * 0.5f
+        );
+        var crossColor = ImGui.ColorConvertFloat4ToU32(new Vector4(1f, 1f, 1f, 1f));
+
+        drawList.AddLine(
+            new Vector2(crossCenter.X - crossSize * 0.35f, crossCenter.Y - crossSize * 0.35f),
+            new Vector2(crossCenter.X + crossSize * 0.35f, crossCenter.Y + crossSize * 0.35f),
+            crossColor, 2f
+        );
+        drawList.AddLine(
+            new Vector2(crossCenter.X + crossSize * 0.35f, crossCenter.Y - crossSize * 0.35f),
+            new Vector2(crossCenter.X - crossSize * 0.35f, crossCenter.Y + crossSize * 0.35f),
+            crossColor, 2f
+        );
+
+        if (isHovered && ImGui.IsMouseClicked(ImGuiMouseButton.Left))
+        {
+            IsOpen = false;
+        }
+
+        ImGui.SetCursorPosY(ImGui.GetCursorPosY() + titleBarHeight);
+
+        if (ImGui.IsMouseHoveringRect(titleBarMin, new Vector2(titleBarMax.X - 35f, titleBarMax.Y)) &&
+            ImGui.IsMouseDragging(ImGuiMouseButton.Left))
+        {
+            var delta = ImGui.GetMouseDragDelta(ImGuiMouseButton.Left);
+            ImGui.SetWindowPos(new Vector2(windowPos.X + delta.X, windowPos.Y + delta.Y));
+            ImGui.ResetMouseDragDelta(ImGuiMouseButton.Left);
         }
     }
 
@@ -181,6 +257,14 @@ public class ConfigWindow : Window, IDisposable
         }
         DrawTooltip("启用磨砂玻璃背景效果\n关闭则使用默认背景");
 
+        var useMainWindowFrostedGlass = config.UseMainWindowFrostedGlass;
+        if (ImGui.Checkbox("悬浮窗磨砂玻璃背景", ref useMainWindowFrostedGlass))
+        {
+            config.UseMainWindowFrostedGlass = useMainWindowFrostedGlass;
+            config.Save();
+        }
+        DrawTooltip("启用悬浮窗磨砂玻璃背景效果\n关闭则使用默认背景");
+
         ImGui.Spacing();
         ImGui.Spacing();
         ImGui.Separator();
@@ -239,7 +323,15 @@ public class ConfigWindow : Window, IDisposable
             config.EnableDataIDFilter = enableDataIDFilter;
             config.Save();
         }
-        DrawTooltip("开启后，只显示指定 DataID 的对象\n关闭则显示所有对象");
+        DrawTooltip("开启后，根据白名单/黑名单模式筛选对象\n关闭则显示所有对象");
+
+        var useDataIDWhitelist = config.UseDataIDWhitelist;
+        if (ImGui.Checkbox("白名单模式", ref useDataIDWhitelist))
+        {
+            config.UseDataIDWhitelist = useDataIDWhitelist;
+            config.Save();
+        }
+        DrawTooltip("白名单：只显示列表中的 DataID\n黑名单：隐藏列表中的 DataID");
 
         ImGui.Spacing();
 

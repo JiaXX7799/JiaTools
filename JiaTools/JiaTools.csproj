@@ -41,7 +41,9 @@
         <PackageReference Include="GuerrillaNtp" Version="3.1.0">
             <Private>true</Private>
         </PackageReference>
-        <PackageReference Include="TerraFX.Interop.Windows" Version="10.0.26100.6" />
+        <PackageReference Include="TerraFX.Interop.Windows" Version="10.0.26100.6">
+            <Private>false</Private>
+        </PackageReference>
         <PackageReference Include="TinyPinyin" Version="1.1.0">
             <Private>true</Private>
         </PackageReference>

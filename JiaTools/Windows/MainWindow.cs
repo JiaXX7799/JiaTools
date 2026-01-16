@@ -5,6 +5,7 @@ using System.Numerics;
 using Dalamud.Interface.Windowing;
 using Dalamud.Game.ClientState.Objects.Enums;
 using FFXIVClientStructs.FFXIV.Client.Game.Character;
+using JiaTools.Helpers;
 using OmenTools.Extensions;
 using static JiaTools.Windows.Colors;
 using static OmenTools.Infos.GameAddon;
@@ -14,6 +15,7 @@ namespace JiaTools.Windows;
 public class MainWindow : Window, IDisposable
 {
     private readonly Configuration config;
+    private readonly CleanBackgroundManager? backgroundManager;
     
     private sealed class GroupData(Vector2 anchorPos, List<GameObjectInfo> objects)
     {
@@ -39,9 +41,23 @@ public class MainWindow : Window, IDisposable
         this.config = config;
         IsOpen = true;
         RespectCloseHotkey = false;
+
+        try
+        {
+            backgroundManager = new CleanBackgroundManager(DService.Instance().Log);
+            backgroundManager.Initialize();
+        }
+        catch (Exception ex)
+        {
+            DService.Instance().Log.Error(ex, "MainWindow磨砂玻璃背景管理器初始化失败");
+            backgroundManager = null;
+        }
     }
 
-    public void Dispose() { }
+    public void Dispose()
+    {
+        backgroundManager?.Dispose();
+    }
 
     private static unsafe bool IsScreenReady()
     {
@@ -253,20 +269,36 @@ public class MainWindow : Window, IDisposable
             ImGui.SetNextWindowSize(bgMax - bgMin, ImGuiCond.Always);
             
 
-            var windowFlags = ImGuiWindowFlags.NoDecoration | 
+            var windowFlags = ImGuiWindowFlags.NoDecoration |
                              ImGuiWindowFlags.NoSavedSettings |
                              ImGuiWindowFlags.NoFocusOnAppearing |
                              ImGuiWindowFlags.NoNav;
-            
+
+            if (config.UseMainWindowFrostedGlass)
+                windowFlags |= ImGuiWindowFlags.NoBackground;
 
             ImGui.PushStyleVar(ImGuiStyleVar.WindowPadding, Vector2.Zero);
             ImGui.PushStyleColor(ImGuiCol.WindowBg, 0);
             ImGui.PushStyleColor(ImGuiCol.Border, 0);
-            
+
             try
             {
                 if (ImGui.Begin(windowID, windowFlags))
+                {
+                    if (config.UseMainWindowFrostedGlass && backgroundManager != null)
+                    {
+                        try
+                        {
+                            backgroundManager.DrawBackground(config.Opacity);
+                        }
+                        catch (Exception ex)
+                        {
+                            DService.Instance().Log.Error(ex, "绘制MainWindow磨砂背景时出错");
+                        }
+                    }
+
                     HandleClickEventsSafely(lineRects, objects, currentPage, groupKey);
+                }
 
                 ImGui.End();
             }
@@ -572,7 +604,10 @@ public class MainWindow : Window, IDisposable
                 .Select(id => id!.Value)
                 .ToHashSet();
 
-            return filterIDs.Count == 0 || filterIDs.Contains(obj.DataID);
+            if (filterIDs.Count == 0) return true;
+
+            var isInList = filterIDs.Contains(obj.DataID);
+            return config.UseDataIDWhitelist ? isInList : !isInList;
         }
         catch (Exception ex)
         {
