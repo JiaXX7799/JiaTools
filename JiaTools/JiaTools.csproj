@@ -1,7 +1,7 @@
 ﻿<Project Sdk="Dalamud.CN.NET.Sdk/14.0.1">
 
     <PropertyGroup>
-        <Authors>AtmoOmen</Authors>
+        <Authors>JiaXX</Authors>
         <Version>1.0.0.0</Version>
         <Description>Useful Tools for dev, build on OmenTools</Description>
         <PackageLicenseExpression>AGPL-3.0-or-later</PackageLicenseExpression>
@@ -12,6 +12,7 @@
     </PropertyGroup>
 
     <PropertyGroup>
+        <EnableWindowsTargeting>true</EnableWindowsTargeting>
         <Nullable>enable</Nullable>
         <LangVersion>latest</LangVersion>
         <AllowUnsafeBlocks>true</AllowUnsafeBlocks>

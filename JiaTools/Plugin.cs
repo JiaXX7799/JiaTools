@@ -1,8 +1,6 @@
 using System;
-using System.Numerics;
 using Dalamud.Plugin;
 using Dalamud.Interface.Windowing;
-using Dalamud.Plugin.Services;
 using JiaTools.Windows;
 
 namespace JiaTools;

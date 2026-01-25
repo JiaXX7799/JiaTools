@@ -5,7 +5,6 @@ using System.Numerics;
 using Dalamud.Interface.Windowing;
 using Dalamud.Game.ClientState.Objects.Enums;
 using FFXIVClientStructs.FFXIV.Client.Game.Character;
-using JiaTools.Helpers;
 using OmenTools.Extensions;
 using static JiaTools.Windows.Colors;
 using static OmenTools.Infos.GameAddon;
