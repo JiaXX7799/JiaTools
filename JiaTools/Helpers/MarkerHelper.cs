@@ -49,7 +49,7 @@ public static class MarkerHelper
         if (obj == null || !obj.IsValid()) return MarkType.None;
 
         // 不给你扫非玩家
-        if (obj.ObjectKind != ObjectKind.Player)
+        if (obj.ObjectKind != ObjectKind.Pc)
             return MarkType.None;
 
         ulong targetObjectId = obj.GameObjectID;

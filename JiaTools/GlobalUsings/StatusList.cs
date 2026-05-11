@@ -1,1 +1,1 @@
-﻿global using StatusList = OmenTools.Service.StatusList;
+global using StatusList = OmenTools.Dalamud.Services.StatusList.Implementations.StatusList;

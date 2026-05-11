@@ -2,6 +2,7 @@ using System;
 using Dalamud.Plugin;
 using Dalamud.Interface.Windowing;
 using JiaTools.Windows;
+using OmenTools.OmenService;
 
 namespace JiaTools;
 

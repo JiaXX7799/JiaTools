@@ -1,3 +1,3 @@
-﻿global using OmenTools;
-global using OmenTools.Service;
-global using OmenTools.Managers;
+global using OmenTools;
+global using OmenTools.Dalamud;
+global using OmenTools.OmenService;

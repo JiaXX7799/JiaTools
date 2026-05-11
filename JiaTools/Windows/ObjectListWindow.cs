@@ -56,7 +56,7 @@ public class ObjectListWindow : Window, IDisposable
         targetObjects2.Clear();
     }
 
-    private void OnTerritoryChanged(ushort territoryId)
+    private void OnTerritoryChanged(uint territoryId)
     {
         // TerritoryChanged -> clear draw
         try
@@ -255,12 +255,12 @@ public class ObjectListWindow : Window, IDisposable
     {
         return kind switch
         {
-            Dalamud.Game.ClientState.Objects.Enums.ObjectKind.Player => showPlayers,
+            Dalamud.Game.ClientState.Objects.Enums.ObjectKind.Pc => showPlayers,
             Dalamud.Game.ClientState.Objects.Enums.ObjectKind.BattleNpc => showBattleNpc,
             Dalamud.Game.ClientState.Objects.Enums.ObjectKind.EventNpc => showEventNpc,
             Dalamud.Game.ClientState.Objects.Enums.ObjectKind.EventObj => showEventObj,
             Dalamud.Game.ClientState.Objects.Enums.ObjectKind.Treasure => showTreasure,
-            Dalamud.Game.ClientState.Objects.Enums.ObjectKind.MountType => showMountType,
+            Dalamud.Game.ClientState.Objects.Enums.ObjectKind.Mount => showMountType,
             Dalamud.Game.ClientState.Objects.Enums.ObjectKind.Companion => showCompanion,
             _ => showOthers
         };
@@ -270,12 +270,12 @@ public class ObjectListWindow : Window, IDisposable
     {
         return kind switch
         {
-            Dalamud.Game.ClientState.Objects.Enums.ObjectKind.Player => "Player",
+            Dalamud.Game.ClientState.Objects.Enums.ObjectKind.Pc => "Player",
             Dalamud.Game.ClientState.Objects.Enums.ObjectKind.BattleNpc => "战斗NPC(BattleNpc)",
             Dalamud.Game.ClientState.Objects.Enums.ObjectKind.EventNpc => "事件NPC(EventNpc)",
             Dalamud.Game.ClientState.Objects.Enums.ObjectKind.EventObj => "事件对象(EventObj)",
             Dalamud.Game.ClientState.Objects.Enums.ObjectKind.Treasure => "宝箱(Treasure)",
-            Dalamud.Game.ClientState.Objects.Enums.ObjectKind.MountType => "坐骑(MountType)",
+            Dalamud.Game.ClientState.Objects.Enums.ObjectKind.Mount => "坐骑(MountType)",
             Dalamud.Game.ClientState.Objects.Enums.ObjectKind.Companion => "宠物(Companion)",
             _ => kind.ToString()
         };

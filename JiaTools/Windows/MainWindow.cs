@@ -7,7 +7,7 @@ using Dalamud.Game.ClientState.Objects.Enums;
 using FFXIVClientStructs.FFXIV.Client.Game.Character;
 using OmenTools.Extensions;
 using static JiaTools.Windows.Colors;
-using static OmenTools.Infos.GameAddon;
+using static OmenTools.Info.Game.Data.Addons;
 
 namespace JiaTools.Windows;
 
@@ -578,8 +578,8 @@ public class MainWindow : Window, IDisposable
 
         return obj.ObjectKind switch
         {
-            ObjectKind.Player when obj != null && localPlayer != null && obj.Equals(localPlayer) => config.ShowLocalPlayer,
-            ObjectKind.Player => config.ShowPlayers,
+            ObjectKind.Pc when obj != null && localPlayer != null && obj.Equals(localPlayer) => config.ShowLocalPlayer,
+            ObjectKind.Pc => config.ShowPlayers,
             ObjectKind.BattleNpc => config.ShowBattleNpcs,
             ObjectKind.EventNpc => config.ShowEventNpcs,
             ObjectKind.EventObj => config.ShowEventObjs,

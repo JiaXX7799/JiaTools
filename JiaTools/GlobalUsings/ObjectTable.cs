@@ -1,8 +1,8 @@
-﻿global using IPlayerCharacter = OmenTools.Service.IPlayerCharacter;
-global using ICharacter = OmenTools.Service.ICharacter;
-global using IGameObject = OmenTools.Service.IGameObject;
-global using IObjectTable = OmenTools.Service.IObjectTable;
-global using IEventObj = OmenTools.Service.IEventObj;
-global using INpc = OmenTools.Service.INPC;
-global using IBattleChara = OmenTools.Service.IBattleChara;
-global using IBattleNpc = OmenTools.Service.IBattleNPC;
+global using IPlayerCharacter = OmenTools.Dalamud.Services.ObjectTable.Abstractions.ObjectKinds.IPlayerCharacter;
+global using ICharacter = OmenTools.Dalamud.Services.ObjectTable.Abstractions.ObjectKinds.ICharacter;
+global using IGameObject = OmenTools.Dalamud.Services.ObjectTable.Abstractions.ObjectKinds.IGameObject;
+global using IObjectTable = OmenTools.Dalamud.Services.ObjectTable.Abstractions.IObjectTable;
+global using IEventObj = OmenTools.Dalamud.Services.ObjectTable.Abstractions.ObjectKinds.IEventObj;
+global using INpc = OmenTools.Dalamud.Services.ObjectTable.Abstractions.ObjectKinds.INPC;
+global using IBattleChara = OmenTools.Dalamud.Services.ObjectTable.Abstractions.ObjectKinds.IBattleChara;
+global using IBattleNpc = OmenTools.Dalamud.Services.ObjectTable.Abstractions.ObjectKinds.IBattleNPC;

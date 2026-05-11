@@ -1,5 +1,5 @@
-﻿global using static OmenTools.Helpers.HelpersOm;
-global using static OmenTools.Helpers.ThrottlerHelper;
-global using static OmenTools.Helpers.ContentsFinderHelper;
-global using OmenTools.Helpers;
+global using static JiaTools.Helpers.HelpersOm;
+global using static OmenTools.Interop.Game.Helpers.ContentsFinderHelper;
+global using OmenTools.Interop.Game.Helpers;
+global using OmenTools.Threading;
 global using JiaTools.Helpers;
