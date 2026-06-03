@@ -3,11 +3,15 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Numerics;
 using Dalamud.Interface.Windowing;
+using FFXIVClientStructs.FFXIV.Client.Game.Character;
+using FFXIVClientStructs.FFXIV.Client.Game.Object;
 
 namespace JiaTools.Windows;
 
 public class ObjectListWindow : Window, IDisposable
 {
+    private readonly Configuration config;
+    private readonly CleanBackgroundManager? backgroundManager;
     private string filterText = "";
     private static readonly string[] ColumnNames = ["ObjectID", "名称", "类型", "标记", "DataID", "目标ID"];
 
@@ -30,11 +34,16 @@ public class ObjectListWindow : Window, IDisposable
     private bool showMountType = true;
     private bool showCompanion = true;
     private bool showOthers = true;
+    private uint _editEntityId;
+    private float _editPosX, _editPosY, _editPosZ;
+    private float _editScale = 1, _editVfxScale = 1;
+    private float _editRotDeg;
 
-    public ObjectListWindow() : base(
+    public ObjectListWindow(Configuration config) : base(
         "对象列表###JiaToolsObjectList",
         ImGuiWindowFlags.NoScrollbar | ImGuiWindowFlags.NoScrollWithMouse)
     {
+        this.config = config;
         Size = new Vector2(800, 600);
         SizeCondition = ImGuiCond.FirstUseEver;
         SizeConstraints = new WindowSizeConstraints
@@ -42,12 +51,25 @@ public class ObjectListWindow : Window, IDisposable
             MinimumSize = new Vector2(600, 400),
             MaximumSize = new Vector2(1200, 900)
         };
-        
+
+        try
+        {
+            backgroundManager = new CleanBackgroundManager(DService.Instance().Log);
+            backgroundManager.Initialize();
+        }
+        catch (Exception ex)
+        {
+            DService.Instance().Log.Error(ex, "ObjectListWindow磨砂玻璃背景管理器初始化失败");
+            backgroundManager = null;
+        }
+
         DService.Instance().ClientState.TerritoryChanged += OnTerritoryChanged;
     }
 
     public void Dispose()
     {
+        backgroundManager?.Dispose();
+
         if (DService.Instance().ClientState != null)
             DService.Instance().ClientState.TerritoryChanged -= OnTerritoryChanged;
         
@@ -72,8 +94,28 @@ public class ObjectListWindow : Window, IDisposable
         }
     }
 
+    public override void PreDraw()
+    {
+        if (config.UseObjectListFrostedGlass)
+            Flags |= ImGuiWindowFlags.NoBackground;
+        else
+            Flags &= ~ImGuiWindowFlags.NoBackground;
+    }
+
     public override void Draw()
     {
+        if (config.UseObjectListFrostedGlass && backgroundManager != null)
+        {
+            try
+            {
+                backgroundManager.DrawBackground(config.ObjectListOpacity);
+            }
+            catch (Exception ex)
+            {
+                DService.Instance().Log.Error(ex, "绘制ObjectListWindow磨砂背景时出错");
+            }
+        }
+
         DrawHeader();
         DrawTypeFilters();
         ImGui.Spacing();
@@ -83,6 +125,9 @@ public class ObjectListWindow : Window, IDisposable
         var availHeight = ImGui.GetContentRegionAvail().Y;
         var linePanelWidth = 250f;
         var tableWidth = availWidth - linePanelWidth - ImGui.GetStyle().ItemSpacing.X;
+
+        if (config.UseObjectListFrostedGlass)
+            ImGui.PushStyleColor(ImGuiCol.ChildBg, new Vector4(0, 0, 0, 0));
 
         if (ImGui.BeginChild("##TablePanel", new Vector2(tableWidth, availHeight)))
         {
@@ -151,6 +196,131 @@ public class ObjectListWindow : Window, IDisposable
                             ImGui.TextUnformatted(objectId);
                             DrawCopyTooltip(objectId);
 
+                            if (ImGui.BeginPopupContextItem($"##VisMenu_{objectId}"))
+                            {
+                                unsafe
+                                {
+                                    var go = (FFXIVClientStructs.FFXIV.Client.Game.Object.GameObject*)obj.Address;
+                                    var rf = (uint*)&go->RenderFlags;
+                                    var isVisible = (*rf & 0x02) == 0;
+
+                                    if (isVisible)
+                                    {
+                                        if (ImGui.MenuItem("隐藏实体"))
+                                            *rf |= 0x02;
+                                    }
+                                    else
+                                    {
+                                        if (ImGui.MenuItem("显示实体"))
+                                            *rf &= ~0x02u;
+                                    }
+
+                                    ImGui.Separator();
+
+                                    var isOverlayHidden = config.HiddenOverlayEntityIDs.Contains(obj.EntityID);
+                                    if (isOverlayHidden)
+                                    {
+                                        if (ImGui.MenuItem("显示悬浮窗"))
+                                        {
+                                            config.HiddenOverlayEntityIDs.Remove(obj.EntityID);
+                                            config.Save();
+                                        }
+                                    }
+                                    else
+                                    {
+                                        if (ImGui.MenuItem("隐藏悬浮窗"))
+                                        {
+                                            config.HiddenOverlayEntityIDs.Add(obj.EntityID);
+                                            config.Save();
+                                        }
+                                    }
+
+                                    ImGui.Separator();
+
+                                    // Pos
+                                    if (ImGui.BeginMenu("设置位置"))
+                                    {
+                                        if (_editEntityId != obj.EntityID)
+                                        {
+                                            var pos = obj.Position;
+                                            _editPosX = pos.X; _editPosY = pos.Y; _editPosZ = pos.Z;
+                                        }
+                                        ImGui.SetNextItemWidth(100);
+                                        ImGui.InputFloat("X", ref _editPosX);
+                                        ImGui.SetNextItemWidth(100);
+                                        ImGui.InputFloat("Y", ref _editPosY);
+                                        ImGui.SetNextItemWidth(100);
+                                        ImGui.InputFloat("Z", ref _editPosZ);
+                                        if (ImGui.Button("填入当前坐标"))
+                                        {
+                                            var pos = obj.Position;
+                                            _editPosX = pos.X; _editPosY = pos.Y; _editPosZ = pos.Z;
+                                        }
+                                        ImGui.SameLine();
+                                        if (ImGui.Button("应用##ApplyPos"))
+                                            go->SetPosition(_editPosX, _editPosY, _editPosZ);
+                                        ImGui.EndMenu();
+                                    }
+
+                                    // Scale
+                                    if (ImGui.BeginMenu("设置模型大小"))
+                                    {
+                                        if (_editEntityId != obj.EntityID)
+                                        {
+                                            _editScale = go->Scale;
+                                            _editVfxScale = go->VfxScale;
+                                        }
+                                        ImGui.SetNextItemWidth(120);
+                                        ImGui.SliderFloat("缩放", ref _editScale, 0.1f, 10f, "%.2f");
+                                        ImGui.SameLine();
+                                        ImGui.SetNextItemWidth(50);
+                                        ImGui.InputFloat("##ScaleInput", ref _editScale, 0, 0, "%.2f");
+                                        ImGui.SameLine();
+                                        if (ImGui.Button("默认##ScaleDef"))
+                                            _editScale = 1f;
+                                        ImGui.SetNextItemWidth(120);
+                                        ImGui.SliderFloat("Vfx缩放", ref _editVfxScale, 0.1f, 10f, "%.2f");
+                                        ImGui.SameLine();
+                                        ImGui.SetNextItemWidth(50);
+                                        ImGui.InputFloat("##VfxInput", ref _editVfxScale, 0, 0, "%.2f");
+                                        ImGui.SameLine();
+                                        if (ImGui.Button("默认##VfxDef"))
+                                            _editVfxScale = 1f;
+                                        if (ImGui.Button("应用##ApplyScale"))
+                                        {
+                                            go->Scale = _editScale;
+                                            go->VfxScale = _editVfxScale;
+                                            if (go->IsCharacter())
+                                            {
+                                                var bc = (BattleChara*)go;
+                                                bc->Character.CharacterData.ModelScale = _editScale;
+                                            }
+                                            go->DisableDraw();
+                                            go->EnableDraw();
+                                        }
+                                        ImGui.EndMenu();
+                                    }
+
+                                    // Rot
+                                    if (ImGui.BeginMenu("设置面向"))
+                                    {
+                                        if (_editEntityId != obj.EntityID)
+                                            _editRotDeg = obj.Rotation * 180f / MathF.PI;
+                                        ImGui.SetNextItemWidth(150);
+                                        ImGui.SliderFloat("角度(度)", ref _editRotDeg, -360f, 360f, "%.0f°");
+                                        ImGui.SameLine();
+                                        ImGui.SetNextItemWidth(60);
+                                        ImGui.InputFloat("##RotInput", ref _editRotDeg, 0, 0, "%.0f");
+                                        if (ImGui.Button("应用##ApplyRot"))
+                                            go->SetRotation(_editRotDeg * MathF.PI / 180f);
+                                        ImGui.EndMenu();
+                                    }
+
+                                    _editEntityId = obj.EntityID;
+                                }
+                                ImGui.EndPopup();
+                            }
+
                             ImGui.TableSetColumnIndex(1);
                             ImGui.TextUnformatted(name);
                             DrawCopyTooltip(name);
@@ -190,6 +360,9 @@ public class ObjectListWindow : Window, IDisposable
             DrawLinePanel();
             ImGui.EndChild();
         }
+
+        if (config.UseObjectListFrostedGlass)
+            ImGui.PopStyleColor();
     }
     
     public void DrawLineOverlay()
@@ -249,6 +422,29 @@ public class ObjectListWindow : Window, IDisposable
         ImGui.Checkbox("宠物(Companion)", ref showCompanion);
         ImGui.SameLine();
         ImGui.Checkbox("其他", ref showOthers);
+
+        ImGui.Spacing();
+        ImGui.Separator();
+        ImGui.Spacing();
+
+        var useFrosted = config.UseObjectListFrostedGlass;
+        if (ImGui.Checkbox("磨砂玻璃背景", ref useFrosted))
+        {
+            config.UseObjectListFrostedGlass = useFrosted;
+            config.Save();
+        }
+
+        if (config.UseObjectListFrostedGlass)
+        {
+            ImGui.SameLine();
+            var opacity = (int)(config.ObjectListOpacity * 100);
+            ImGui.SetNextItemWidth(150);
+            if (ImGui.SliderInt("不透明度##ObjectListOpacity", ref opacity, 10, 100, "%d%%"))
+            {
+                config.ObjectListOpacity = opacity / 100f;
+                config.Save();
+            }
+        }
     }
 
     private bool IsObjectKindVisible(Dalamud.Game.ClientState.Objects.Enums.ObjectKind kind)

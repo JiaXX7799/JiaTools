@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using Dalamud.Configuration;
 
 namespace JiaTools;
@@ -8,7 +9,8 @@ public class Configuration : IPluginConfiguration
 
     public bool Enabled { get; set; } = true;
 
-    public float Opacity { get; set; } = 0.85f;
+    public float MainWindowOpacity { get; set; } = 0.85f;
+    public float ConfigOpacity { get; set; } = 0.85f;
     public float Range { get; set; } = 30f;
     public float FontScale { get; set; } = 1.0f;
     public int MaxObjects { get; set; } = 10;
@@ -37,6 +39,9 @@ public class Configuration : IPluginConfiguration
     public bool EnableCastingFilter { get; set; }
     public bool UseFrostedGlass { get; set; }
     public bool UseMainWindowFrostedGlass { get; set; }
+    public bool UseObjectListFrostedGlass { get; set; }
+    public float ObjectListOpacity { get; set; } = 0.85f;
+    public HashSet<uint> HiddenOverlayEntityIDs { get; set; } = [];
 
     public void Save()
     {

@@ -45,22 +45,9 @@ public class ConfigWindow : Window, IDisposable
     public override void PreDraw()
     {
         if (config.UseFrostedGlass)
-        {
             Flags |= ImGuiWindowFlags.NoBackground;
-            ImGui.PushStyleColor(ImGuiCol.ChildBg, new Vector4(0, 0, 0, 0));
-        }
         else
-        {
             Flags &= ~ImGuiWindowFlags.NoBackground;
-        }
-    }
-
-    public override void PostDraw()
-    {
-        if (config.UseFrostedGlass)
-        {
-            ImGui.PopStyleColor();
-        }
     }
 
     public override void Draw()
@@ -69,7 +56,7 @@ public class ConfigWindow : Window, IDisposable
         {
             try
             {
-                backgroundManager.DrawBackground(config.Opacity);
+                backgroundManager.DrawBackground(config.ConfigOpacity);
             }
             catch (Exception ex)
             {
@@ -82,6 +69,9 @@ public class ConfigWindow : Window, IDisposable
         ImGui.Spacing();
         ImGui.Separator();
         ImGui.Spacing();
+
+        if (config.UseFrostedGlass)
+            ImGui.PushStyleColor(ImGuiCol.ChildBg, new Vector4(0, 0, 0, 0));
 
         if (ImGui.BeginTabBar("##ConfigTabs", ImGuiTabBarFlags.None))
         {
@@ -105,6 +95,9 @@ public class ConfigWindow : Window, IDisposable
 
             ImGui.EndTabBar();
         }
+
+        if (config.UseFrostedGlass)
+            ImGui.PopStyleColor();
     }
 
     private void DrawCustomTitleBar()
@@ -224,17 +217,17 @@ public class ConfigWindow : Window, IDisposable
 
         DrawSectionHeader("外观设置", 0xFFE6B800);
 
-        var opacity = (int)(config.Opacity * 100);
+        var mainOpacity = (int)(config.MainWindowOpacity * 100);
         ImGui.SetNextItemWidth(250);
         ImGui.PushStyleColor(ImGuiCol.SliderGrab, new Vector4(0.4f, 0.7f, 1.0f, 1.0f));
         ImGui.PushStyleColor(ImGuiCol.SliderGrabActive, new Vector4(0.3f, 0.6f, 0.9f, 1.0f));
-        if (ImGui.SliderInt("不透明度", ref opacity, 10, 100, "%d%%"))
+        if (ImGui.SliderInt("悬浮窗不透明度", ref mainOpacity, 10, 100, "%d%%"))
         {
-            config.Opacity = opacity / 100f;
+            config.MainWindowOpacity = mainOpacity / 100f;
             config.Save();
         }
         ImGui.PopStyleColor(2);
-        DrawTooltip("调整悬浮窗的透明度\n数值越大越不透明");
+        DrawTooltip("调整悬浮窗的不透明度\n数值越大越不透明");
 
         var fontScale = (int)(config.FontScale * 100);
         ImGui.SetNextItemWidth(250);
@@ -249,12 +242,27 @@ public class ConfigWindow : Window, IDisposable
         DrawTooltip("调整文字大小\n建议范围：80% - 120%");
 
         var useFrostedGlass = config.UseFrostedGlass;
-        if (ImGui.Checkbox("磨砂玻璃背景", ref useFrostedGlass))
+        if (ImGui.Checkbox("配置窗口磨砂玻璃", ref useFrostedGlass))
         {
             config.UseFrostedGlass = useFrostedGlass;
             config.Save();
         }
-        DrawTooltip("启用磨砂玻璃背景效果\n关闭则使用默认背景");
+        DrawTooltip("启用配置窗口的磨砂玻璃背景效果\n关闭则使用默认背景");
+
+        if (config.UseFrostedGlass)
+        {
+            var configOpacity = (int)(config.ConfigOpacity * 100);
+            ImGui.SetNextItemWidth(250);
+            ImGui.PushStyleColor(ImGuiCol.SliderGrab, new Vector4(0.4f, 0.7f, 1.0f, 1.0f));
+            ImGui.PushStyleColor(ImGuiCol.SliderGrabActive, new Vector4(0.3f, 0.6f, 0.9f, 1.0f));
+            if (ImGui.SliderInt("配置窗口不透明度", ref configOpacity, 10, 100, "%d%%"))
+            {
+                config.ConfigOpacity = configOpacity / 100f;
+                config.Save();
+            }
+            ImGui.PopStyleColor(2);
+            DrawTooltip("调整配置窗口磨砂玻璃的不透明度\n数值越大越不透明");
+        }
 
         var useMainWindowFrostedGlass = config.UseMainWindowFrostedGlass;
         if (ImGui.Checkbox("悬浮窗磨砂玻璃背景", ref useMainWindowFrostedGlass))
@@ -262,7 +270,7 @@ public class ConfigWindow : Window, IDisposable
             config.UseMainWindowFrostedGlass = useMainWindowFrostedGlass;
             config.Save();
         }
-        DrawTooltip("启用悬浮窗磨砂玻璃背景效果\n关闭则使用默认背景");
+        DrawTooltip("启用悬浮窗的磨砂玻璃背景效果\n关闭则使用默认背景");
 
         ImGui.Spacing();
         ImGui.Spacing();

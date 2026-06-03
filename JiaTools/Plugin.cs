@@ -28,7 +28,7 @@ public sealed class Plugin : IDalamudPlugin
             windowSystem = new WindowSystem("JiaTools");
 
             mainWindow = new MainWindow(configuration);
-            objectListWindow = new ObjectListWindow();
+            objectListWindow = new ObjectListWindow(configuration);
             configWindow = new ConfigWindow(configuration, objectListWindow);
 
             windowSystem.AddWindow(mainWindow);

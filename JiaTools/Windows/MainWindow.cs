@@ -172,6 +172,7 @@ public class MainWindow : Window, IDisposable
                 if (!ShouldShowObject(obj)) continue;
                 if (!PassDataIDFilter(obj)) continue;
                 if (!PassCastingFilter(obj)) continue;
+                if (config.HiddenOverlayEntityIDs.Contains(obj.EntityID)) continue;
 
                 if (DService.Instance().GameGUI == null || !DService.Instance().GameGUI.WorldToScreen(obj.Position, out var screenPos)) continue;
                 var objInfo = CreateGameObjectInfo(obj);
@@ -277,8 +278,17 @@ public class MainWindow : Window, IDisposable
                 windowFlags |= ImGuiWindowFlags.NoBackground;
 
             ImGui.PushStyleVar(ImGuiStyleVar.WindowPadding, Vector2.Zero);
-            ImGui.PushStyleColor(ImGuiCol.WindowBg, 0);
-            ImGui.PushStyleColor(ImGuiCol.Border, 0);
+            if (config.UseMainWindowFrostedGlass)
+            {
+                ImGui.PushStyleColor(ImGuiCol.WindowBg, 0);
+                ImGui.PushStyleColor(ImGuiCol.Border, 0);
+            }
+            else
+            {
+                var style = ImGui.GetStyle();
+                ImGui.PushStyleColor(ImGuiCol.WindowBg, style.Colors[(int)ImGuiCol.WindowBg]);
+                ImGui.PushStyleColor(ImGuiCol.Border, style.Colors[(int)ImGuiCol.Border]);
+            }
 
             try
             {
@@ -288,7 +298,7 @@ public class MainWindow : Window, IDisposable
                     {
                         try
                         {
-                            backgroundManager.DrawBackground(config.Opacity);
+                            backgroundManager.DrawBackground(config.MainWindowOpacity);
                         }
                         catch (Exception ex)
                         {
@@ -529,13 +539,13 @@ public class MainWindow : Window, IDisposable
         var bgMax = position + new Vector2(maxWidth + padding.X, totalHeight);
 
         // background
-        var bgColorTop = ImGui.ColorConvertFloat4ToU32(new Vector4(0.05f, 0.05f, 0.08f, config.Opacity * 0.92f));
-        var bgColorBottom = ImGui.ColorConvertFloat4ToU32(new Vector4(0.02f, 0.02f, 0.04f, config.Opacity * 0.95f));
+        var bgColorTop = ImGui.ColorConvertFloat4ToU32(new Vector4(0.05f, 0.05f, 0.08f, config.MainWindowOpacity * 0.92f));
+        var bgColorBottom = ImGui.ColorConvertFloat4ToU32(new Vector4(0.02f, 0.02f, 0.04f, config.MainWindowOpacity * 0.95f));
         drawList.AddRectFilledMultiColor(bgMin, bgMax, bgColorTop, bgColorTop, bgColorBottom, bgColorBottom);
 
         // border
-        var borderColor1 = ImGui.ColorConvertFloat4ToU32(new Vector4(0.3f, 0.5f, 0.8f, config.Opacity * 0.6f));
-        var borderColor2 = ImGui.ColorConvertFloat4ToU32(new Vector4(0.2f, 0.3f, 0.5f, config.Opacity * 0.3f));
+        var borderColor1 = ImGui.ColorConvertFloat4ToU32(new Vector4(0.3f, 0.5f, 0.8f, config.MainWindowOpacity * 0.6f));
+        var borderColor2 = ImGui.ColorConvertFloat4ToU32(new Vector4(0.2f, 0.3f, 0.5f, config.MainWindowOpacity * 0.3f));
         drawList.AddRect(bgMin - new Vector2(1, 1), bgMax + new Vector2(1, 1), borderColor2, 4f, ImDrawFlags.None, 2f);
         drawList.AddRect(bgMin, bgMax, borderColor1, 4f, ImDrawFlags.None, 1.5f);
 
@@ -545,8 +555,7 @@ public class MainWindow : Window, IDisposable
 
         foreach (var (text, color, copyValue) in lines)
         {
-            var finalColor = color with { W = config.Opacity };
-            var textColor = ImGui.ColorConvertFloat4ToU32(finalColor);
+            var textColor = ImGui.ColorConvertFloat4ToU32(color);
 
             var font = ImGui.GetFont();
             var scaledSize = font.FontSize * config.FontScale;
@@ -646,7 +655,7 @@ public class MainWindow : Window, IDisposable
             {
                 EntityID = obj.EntityID,
                 DataID = obj.DataID,
-                Name = obj.Name?.TextValue ?? string.Empty,
+                Name = obj.Name?.ToString() ?? string.Empty,
                 ObjectKind = obj.ObjectKind,
                 Position = obj.Position,
                 Rotation = obj.Rotation,
@@ -688,7 +697,7 @@ public class MainWindow : Window, IDisposable
                 if (castTargetID != 0)
                 {
                     var castTarget = DService.Instance().ObjectTable?.SearchByID(castTargetID);
-                    objInfo.CastTargetName = castTarget?.Name?.TextValue ?? $"ID:{castTargetID}";
+                    objInfo.CastTargetName = castTarget?.Name?.ToString() ?? $"ID:{castTargetID}";
                 }
                 else
                     objInfo.CastTargetName = "无目标";
